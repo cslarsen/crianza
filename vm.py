@@ -16,6 +16,7 @@ class Stack:
     def push(self, value):
         self._values.append(value)
 
+    @property
     def top(self):
         return self._values[-1]
 
@@ -38,8 +39,9 @@ class Machine:
     def push(self, value):
         self.data_stack.push(value)
 
+    @property
     def top(self):
-        return self.data_stack.top()
+        return self.data_stack.top
 
     def run(self):
         while self.instruction_pointer < len(self.code):
@@ -233,21 +235,20 @@ def constant_fold(code):
         for i, ops in enumerate(zip(code, code[1:], code[2:])):
             a, b, op = ops
             if type(a)==type(b)==int and op in arithmetic:
-                m = Machine(ops)
-                m.run()
-                result = m.top()
+                result = Machine(ops).run().top
                 del code[i:i+3]
                 code.insert(i, result)
                 keep_running = True
-                print("Optimizer: Constant-folded %d%s%d to %d" % (a,op,b,result))
+                print("Optimizer: Constant-folded % d%s %d to %d" % (a,op,b,result))
                 break
     return code
 
-def repl():
+def repl(optimize=True):
     while True:
         source = raw_input("> ")
         code = parse(source)
-        code = constant_fold(code)
+        if optimize:
+            code = constant_fold(code)
         Machine(code).run()
 
 def test_optimizer(code = [2, 3, "+", 5, "*", "println"]):
