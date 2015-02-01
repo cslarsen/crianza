@@ -239,7 +239,7 @@ def constant_fold(code):
                 del code[i:i+3]
                 code.insert(i, result)
                 keep_running = True
-                print("Optimizer: Constant-folded % d%s %d to %d" % (a,op,b,result))
+                print("Optimizer: Constant-folded %d %s %d to %d" % (a,op,b,result))
                 break
     return code
 
