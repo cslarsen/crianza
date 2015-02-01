@@ -220,7 +220,7 @@ def parse(text):
                     (tokenize.tok_name[toknum], tokval))
     return code
 
-def constant_fold(code):
+def constant_fold(code, silent=True):
     """Constant-folds simple expressions like 2 3 + to 5."""
 
     # Loop until we haven't done any optimizations.  E.g., "2 3 + 5 *" will be
@@ -239,7 +239,8 @@ def constant_fold(code):
                 del code[i:i+3]
                 code.insert(i, result)
                 keep_running = True
-                print("Optimizer: Constant-folded %d %s %d to %d" % (a,op,b,result))
+                if not silent:
+                    print("Optimizer: Constant-folded %d %s %d to %d" % (a,op,b,result))
                 break
     return code
 
@@ -248,27 +249,8 @@ def repl(optimize=True):
         source = raw_input("> ")
         code = parse(source)
         if optimize:
-            code = constant_fold(code)
+            code = constant_fold(code, silent=False)
         Machine(code).run()
-
-def test_optimizer(code = [2, 3, "+", 5, "*", "println"]):
-    print("Code before optimization: %s" % str(code))
-    optimized = constant_fold(code)
-    print("Code after optimization: %s" % str(optimized))
-
-    print("Stack after running original program:")
-    a = Machine(code)
-    a.run()
-    a.dump_stack()
-
-    print("Stack after running optimized program:")
-    b = Machine(optimized)
-    b.run()
-    b.dump_stack()
-
-    result = a.data_stack._values == b.data_stack._values
-    print("Result: %s" % ("OK" if result else "FAIL"))
-    return result
 
 if __name__ == "__main__":
     try:
@@ -277,7 +259,6 @@ if __name__ == "__main__":
             if cmd == "repl":
                 repl()
             elif cmd == "test":
-                test_optimizer()
                 examples()
             else:
                 print("Commands: repl, test")
