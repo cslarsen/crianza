@@ -1,7 +1,7 @@
+# First two numbers in the sequence
 0 dup println
 1 dup println
 
-swap over +
-dup println
-
-6 jmp
+swap over +  # calculate next Fibonacci number
+dup println  # print it
+6 jmp        # loop forever

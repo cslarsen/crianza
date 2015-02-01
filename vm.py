@@ -217,6 +217,7 @@ class Machine:
 def parse(stream):
     code = []
     tokens = tokenize.generate_tokens(stream.readline)
+
     while True:
         for toknum, tokval, _, _, _ in tokens:
             if toknum == tokenize.NUMBER:
@@ -227,6 +228,8 @@ def parse(stream):
                 break
             elif toknum == tokenize.ENDMARKER:
                 return code
+            elif toknum == tokenize.COMMENT:
+                pass
             else:
                 raise RuntimeError("Unknown token %s: '%s'" %
                         (tokenize.tok_name[toknum], tokval))
