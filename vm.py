@@ -54,6 +54,7 @@ class Machine:
             "*":        self.mul,
             "+":        self.add,
             "-":        self.sub,
+            ".":        self.println,
             "/":        self.div,
             "==":       self.eq,
             "add":      self.add,
@@ -223,13 +224,15 @@ def constant_fold(code):
     # Loop until we haven't done any optimizations.  E.g., "2 3 + 5 *" will be
     # optimized to "5 5 *" and in the next iteration to 25.
 
+    arithmetic = ["+", "-", "*", "/", "%", "add", "sub", "mul", "div", "mod"]
+
     keep_running = True
     while keep_running:
         keep_running = False
         # Find two consecutive numbes and an arithmetic operator
         for i, ops in enumerate(zip(code, code[1:], code[2:])):
             a, b, op = ops
-            if type(a)==type(b)==int and op in ["+", "-", "*", "/"]:
+            if type(a)==type(b)==int and op in arithmetic:
                 m = Machine(ops)
                 m.run()
                 result = m.top()
