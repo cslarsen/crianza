@@ -10,17 +10,10 @@ class TestVM(unittest.TestCase):
     def _test_arithmetic(self, a, b, op):
         self.assertEqual(Machine([a, b, op.__name__]).run().stack, [op(a,b)])
 
-    def _test_stack(self, numbers, op):
-        code = numbers[:]
-        self.assertEqual(Machine(code).run().stack, numbers)
-        code += [op.__name__]*(len(numbers)-1)
-        self.assertEqual(Machine(code).run().stack, [reduce(op,
-            reversed(numbers))])
-
     def test_stack(self):
-        ops = [mul, add]
-        for op in ops:
-            self._test_stack([1,2,3,4,5], op)
+        self.assertEqual(Machine([1,2,3,4,5,"*","*","*","*"]).run().stack, [120])
+        self.assertEqual(Machine([1,2,3,4,5,"-","-","-","-"]).run().stack, [3])
+        self.assertEqual(Machine([1,2,3,4,5,"+","+","+","+"]).run().stack, [15])
 
     def test_arithmetic(self):
         ops = [mul, add]
