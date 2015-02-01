@@ -1,0 +1,29 @@
+# ---- program start ----
+10 call
+0 exit
+# ---- program end ----
+
+# ---- subroutines ----
+
+# routine (4) Print subroutine
+dup println return
+
+# routine (7) Square
+dup * return
+
+# routine (10) Main
+"one"
+4 call # print
+"two"
+4 call # print
+"three"
+4 call # print
+
+12
+7 call # square
+4 call # print
+
+"finished" println
+stack
+
+return

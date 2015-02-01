@@ -44,13 +44,18 @@ class Machine:
     def top(self):
         return self.data_stack.top
 
+    def step(self):
+        opcode = self.code[self.instruction_pointer]
+        self.instruction_pointer += 1
+        self.dispatch(opcode)
+
     def run(self):
         try:
             while self.instruction_pointer < len(self.code):
-                opcode = self.code[self.instruction_pointer]
-                self.instruction_pointer += 1
-                self.dispatch(opcode)
+                self.step()
             return self
+        except StopIteration:
+            pass
         except EOFError:
             pass
 
@@ -72,6 +77,7 @@ class Machine:
             "div":      self.div,
             "drop":     self.drop,
             "dup":      self.dup,
+            "exit":     self.exit,
             "false":    self.false_,
             "if":       self.if_stmt,
             "jmp":      self.jmp,
@@ -124,6 +130,9 @@ class Machine:
     def mod(self):
         last = self.pop()
         self.push(self.pop() % last)
+
+    def exit(self):
+        raise StopIteration
 
     def dup(self):
         a = self.pop()
