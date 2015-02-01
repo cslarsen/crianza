@@ -27,6 +27,11 @@ class Machine:
         self.instruction_pointer = 0
         self.code = code
 
+    @property
+    def stack(self):
+        """Returns the data (operand) stack values."""
+        return self.data_stack._values
+
     def pop(self):
         return self.data_stack.pop()
 
@@ -41,26 +46,32 @@ class Machine:
             opcode = self.code[self.instruction_pointer]
             self.instruction_pointer += 1
             self.dispatch(opcode)
+        return self
 
     def dispatch(self, op):
         dispatch_map = {
             "%":        self.mod,
             "*":        self.mul,
-            "+":        self.plus,
-            "-":        self.minus,
+            "+":        self.add,
+            "-":        self.sub,
             "/":        self.div,
             "==":       self.eq,
+            "add":      self.add,
             "cast_int": self.cast_int,
             "cast_str": self.cast_str,
+            "div":      self.div,
             "drop":     self.drop,
             "dup":      self.dup,
             "if":       self.if_stmt,
             "jmp":      self.jmp,
+            "mod":      self.mod,
+            "mul":      self.mul,
             "over":     self.over,
             "print":    self.print_,
             "println":  self.println,
             "read":     self.read,
             "stack":    self.dump_stack,
+            "sub":      self.sub,
             "swap":     self.swap,
         }
 
@@ -76,10 +87,10 @@ class Machine:
 
     # OPERATIONS FOLLOW:
 
-    def plus(self):
+    def add(self):
         self.push(self.pop() + self.pop())
 
-    def minus(self):
+    def sub(self):
         last = self.pop()
         self.push(self.pop() - last)
 
