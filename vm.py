@@ -22,11 +22,12 @@ class Stack:
 
 
 class Machine:
-    def __init__(self, code):
+    def __init__(self, code, stdout=sys.stdout):
         self.data_stack = Stack()
         self.return_stack = Stack()
         self.instruction_pointer = 0
         self.code = code
+        self.stdout = stdout
 
     @property
     def stack(self):
@@ -44,11 +45,14 @@ class Machine:
         return self.data_stack.top
 
     def run(self):
-        while self.instruction_pointer < len(self.code):
-            opcode = self.code[self.instruction_pointer]
-            self.instruction_pointer += 1
-            self.dispatch(opcode)
-        return self
+        try:
+            while self.instruction_pointer < len(self.code):
+                opcode = self.code[self.instruction_pointer]
+                self.instruction_pointer += 1
+                self.dispatch(opcode)
+            return self
+        except EOFError:
+            pass
 
     def dispatch(self, op):
         dispatch_map = {
@@ -58,13 +62,17 @@ class Machine:
             "-":        self.sub,
             ".":        self.println,
             "/":        self.div,
+            "<":        self.less,
             "==":       self.eq,
+            ">":        self.greater,
             "add":      self.add,
+            "call":     self.call,
             "cast_int": self.cast_int,
             "cast_str": self.cast_str,
             "div":      self.div,
             "drop":     self.drop,
             "dup":      self.dup,
+            "false":    self.false_,
             "if":       self.if_stmt,
             "jmp":      self.jmp,
             "mod":      self.mod,
@@ -73,9 +81,11 @@ class Machine:
             "print":    self.print_,
             "println":  self.println,
             "read":     self.read,
+            "return":   self.return_,
             "stack":    self.dump_stack,
             "sub":      self.sub,
             "swap":     self.swap,
+            "true":     self.true_,
         }
 
         if op in dispatch_map:
@@ -96,6 +106,13 @@ class Machine:
     def sub(self):
         last = self.pop()
         self.push(self.pop() - last)
+
+    def call(self):
+        self.return_stack.push(self.instruction_pointer)
+        self.jmp()
+
+    def return_(self):
+        self.instruction_pointer = self.return_stack.pop()
 
     def mul(self):
         self.push(self.pop() * self.pop())
@@ -130,13 +147,13 @@ class Machine:
         self.push(a)
 
     def print_(self):
-        sys.stdout.write(str(self.pop()))
-        sys.stdout.flush()
+        self.stdout.write(str(self.pop()))
+        self.stdout.flush()
 
     def println(self):
         self.print_()
-        sys.stdout.write("\n")
-        sys.stdout.flush()
+        self.stdout.write("\n")
+        self.stdout.flush()
 
     def read(self):
         self.push(raw_input())
@@ -149,6 +166,20 @@ class Machine:
 
     def eq(self):
         self.push(self.pop() == self.pop())
+
+    def less(self):
+        a = self.pop()
+        self.push(a < self.pop())
+
+    def greater(self):
+        a = self.pop()
+        self.push(a > self.pop())
+
+    def true_(self):
+        self.push(True)
+
+    def false_(self):
+        self.push(False)
 
     def if_stmt(self):
         false_clause = self.pop()
@@ -183,41 +214,22 @@ class Machine:
         for v in reversed(self.data_stack._values):
             print(" - type %s, value '%s'" % (type(v), v))
 
-
-def examples():
-    print("** Program 1: Runs the code for `print((2+3)*4)`")
-    Machine([2, 3, "+", 4, "*", "println"]).run()
-
-    print("\n** Program 2: Ask for numbers, computes sum and product.")
-    Machine([
-        '"Enter a number: "', "print", "read", "cast_int",
-        '"Enter another number: "', "print", "read", "cast_int",
-        "over", "over",
-        '"Their sum is: "', "print", "+", "println",
-        '"Their product is: "', "print", "*", "println"
-    ]).run()
-
-    print("\n** Program 3: Shows branching and looping (use CTRL+D to exit).")
-    Machine([
-        '"Enter a number: "', "print", "read", "cast_int",
-        '"The number "', "print", "dup", "print", '" is "', "print",
-        2, "%", 0, "==", '"even."', '"odd."', "if", "println",
-        0, "jmp" # loop forever!
-    ]).run()
-
-def parse(text):
+def parse(stream):
     code = []
-    tokens = tokenize.generate_tokens(StringIO(text).readline)
-    for toknum, tokval, _, _, _ in tokens:
-        if toknum == tokenize.NUMBER:
-            code.append(int(tokval))
-        elif toknum in [tokenize.OP, tokenize.STRING, tokenize.NAME]:
-            code.append(tokval)
-        elif toknum == tokenize.ENDMARKER:
-            break
-        else:
-            raise RuntimeError("Unknown token %s: '%s'" %
-                    (tokenize.tok_name[toknum], tokval))
+    tokens = tokenize.generate_tokens(stream.readline)
+    while True:
+        for toknum, tokval, _, _, _ in tokens:
+            if toknum == tokenize.NUMBER:
+                code.append(int(tokval))
+            elif toknum in [tokenize.OP, tokenize.STRING, tokenize.NAME]:
+                code.append(tokval)
+            elif toknum in [tokenize.NEWLINE, tokenize.NL]:
+                break
+            elif toknum == tokenize.ENDMARKER:
+                return code
+            else:
+                raise RuntimeError("Unknown token %s: '%s'" %
+                        (tokenize.tok_name[toknum], tokval))
     return code
 
 def constant_fold(code, silent=True):
@@ -247,24 +259,20 @@ def constant_fold(code, silent=True):
 def repl(optimize=True):
     while True:
         source = raw_input("> ")
-        code = parse(source)
+        code = parse(StringIO(source))
         if optimize:
             code = constant_fold(code, silent=False)
         Machine(code).run()
 
 if __name__ == "__main__":
     try:
-        if len(sys.argv) > 1:
-            cmd = sys.argv[1]
-            if cmd == "repl":
-                repl()
-            elif cmd == "test":
-                examples()
-            else:
-                print("Commands: repl, test")
-        else:
+        if len(sys.argv) == 1:
             repl()
+            sys.exit(0)
+
+        for name in sys.argv[1:]:
+            with open(name, "rt") as file:
+                Machine(parse(file)).run()
+
     except KeyboardInterrupt:
-        pass
-    except EOFError:
         pass

@@ -1,0 +1,7 @@
+0 dup println
+1 dup println
+
+swap over +
+dup println
+
+6 jmp

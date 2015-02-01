@@ -8,3 +8,9 @@ very simple peephole-optimizer that does constant folding (and ignoring the
 fact that jumps are then off).
 
 It's an educational project.
+
+Example
+-------
+
+    python vm.py examples/fibonacci.source | head -20
+
