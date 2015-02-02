@@ -12,5 +12,20 @@ It's an educational project.
 Example
 -------
 
+Here's code to print the Fibonacci sequence:
+
+    : println dup . ;
+    : next swap over + ;
+
+    # Start values
+    0 println
+    1 println
+
+    # Loop forever
+    @ next println return
+
+You can run it by typing:
+
     python vm.py examples/fibonacci.source | head -20
 
+More examples in the `examples/` folder.

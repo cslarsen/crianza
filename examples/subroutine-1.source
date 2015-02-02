@@ -6,7 +6,7 @@
 # ---- subroutines ----
 
 # routine (4) Print subroutine
-dup println return
+dup . return
 
 # routine (7) Square
 dup * return
@@ -23,7 +23,7 @@ dup * return
 7 call # square
 4 call # print
 
-"finished" println
+"finished" .
 stack
 
 return

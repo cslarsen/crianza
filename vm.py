@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 from StringIO import StringIO
+from tokenize import *
+import string
 import sys
-import tokenize
 
 class Stack:
     def __init__(self):
@@ -29,6 +30,40 @@ class Machine:
         self.code = code
         self.stdout = stdout
 
+        self.dispatch_map = {
+            "%":        self.mod,
+            "*":        self.mul,
+            "+":        self.add,
+            "-":        self.sub,
+            ".":        self.dot,
+            "/":        self.div,
+            "<":        self.less,
+            "==":       self.eq,
+            ">":        self.greater,
+            "@":        self.at,
+            "add":      self.add,
+            "call":     self.call,
+            "cast_int": self.cast_int,
+            "cast_str": self.cast_str,
+            "div":      self.div,
+            "drop":     self.drop,
+            "dup":      self.dup,
+            "exit":     self.exit,
+            "false":    self.false_,
+            "if":       self.if_stmt,
+            "jmp":      self.jmp,
+            "mod":      self.mod,
+            "mul":      self.mul,
+            "over":     self.over,
+            "read":     self.read,
+            "return":   self.return_,
+            "stack":    self.dump_stack,
+            "sub":      self.sub,
+            "swap":     self.swap,
+            "true":     self.true_,
+            "write":    self.write,
+        }
+
     @property
     def stack(self):
         """Returns the data (operand) stack values."""
@@ -44,15 +79,12 @@ class Machine:
     def top(self):
         return self.data_stack.top
 
-    def step(self):
-        opcode = self.code[self.instruction_pointer]
-        self.instruction_pointer += 1
-        self.dispatch(opcode)
-
     def run(self):
         try:
             while self.instruction_pointer < len(self.code):
-                self.step()
+                opcode = self.code[self.instruction_pointer]
+                self.instruction_pointer += 1
+                self.dispatch(opcode)
             return self
         except StopIteration:
             pass
@@ -60,42 +92,8 @@ class Machine:
             pass
 
     def dispatch(self, op):
-        dispatch_map = {
-            "%":        self.mod,
-            "*":        self.mul,
-            "+":        self.add,
-            "-":        self.sub,
-            ".":        self.println,
-            "/":        self.div,
-            "<":        self.less,
-            "==":       self.eq,
-            ">":        self.greater,
-            "add":      self.add,
-            "call":     self.call,
-            "cast_int": self.cast_int,
-            "cast_str": self.cast_str,
-            "div":      self.div,
-            "drop":     self.drop,
-            "dup":      self.dup,
-            "exit":     self.exit,
-            "false":    self.false_,
-            "if":       self.if_stmt,
-            "jmp":      self.jmp,
-            "mod":      self.mod,
-            "mul":      self.mul,
-            "over":     self.over,
-            "print":    self.print_,
-            "println":  self.println,
-            "read":     self.read,
-            "return":   self.return_,
-            "stack":    self.dump_stack,
-            "sub":      self.sub,
-            "swap":     self.swap,
-            "true":     self.true_,
-        }
-
-        if op in dispatch_map:
-            dispatch_map[op]()
+        if op in self.dispatch_map:
+            self.dispatch_map[op]()
         else:
             if isinstance(op, int):
                 self.push(op) # push numbers on stack
@@ -155,12 +153,15 @@ class Machine:
         self.push(b)
         self.push(a)
 
-    def print_(self):
+    def write(self):
         self.stdout.write(str(self.pop()))
         self.stdout.flush()
 
-    def println(self):
-        self.print_()
+    def at(self):
+        self.return_stack.push(self.instruction_pointer - 1)
+
+    def dot(self):
+        self.write()
         self.stdout.write("\n")
         self.stdout.flush()
 
@@ -218,31 +219,121 @@ class Machine:
             raise RuntimError("JMP address must be a valid integer.")
 
     def dump_stack(self):
-        print("Data stack (top first):")
-
+        self.stdout.write("Data stack:\n")
         for v in reversed(self.data_stack._values):
-            print(" - type %s, value '%s'" % (type(v), v))
+            self.stdout.write(" - type %s, value '%s'\n" % (type(v), v))
+
+        self.stdout.write("Return stack:\n")
+        for v in reversed(self.return_stack._values):
+            self.stdout.write(" - address %s\n" % str(v))
+
+        self.stdout.flush()
 
 def parse(stream):
+
     code = []
-    tokens = tokenize.generate_tokens(stream.readline)
+    tokens = generate_tokens(stream.readline)
+
+    def strip_whitespace(s):
+        r = ""
+        for ch in s:
+            if not ch in string.whitespace:
+                r += ch
+            else:
+                r += "\\x%x" % ord(ch)
+        return r
 
     while True:
-        for toknum, tokval, _, _, _ in tokens:
-            if toknum == tokenize.NUMBER:
-                code.append(int(tokval))
-            elif toknum in [tokenize.OP, tokenize.STRING, tokenize.NAME]:
-                code.append(tokval)
-            elif toknum in [tokenize.NEWLINE, tokenize.NL]:
+        for token, value, _, _, _ in tokens:
+            if token == NUMBER:
+                code.append(int(value))
+            elif token in [OP, STRING, NAME]:
+                code.append(value)
+            elif token in [NEWLINE, NL]:
                 break
-            elif toknum == tokenize.ENDMARKER:
-                return code
-            elif toknum == tokenize.COMMENT:
+            elif token in [COMMENT, INDENT, DEDENT]:
                 pass
+            elif token == ENDMARKER:
+                return code
             else:
                 raise RuntimeError("Unknown token %s: '%s'" %
-                        (tokenize.tok_name[toknum], tokval))
+                        (tok_name[token], strip_whitespace(value)))
     return code
+
+def translate(code, dump_source=False):
+    """Translates stuff such as subroutines etc into a complete working
+    code."""
+
+    output = []
+    subroutine = {}
+    builtins = Machine([]).dispatch_map
+
+    try:
+        it = code.__iter__()
+        while True:
+            word = it.next()
+            if word == ":":
+                name = it.next()
+                if name in builtins:
+                    raise RuntimeError("Cannot shadow internal word definition '%s'." % name)
+                if name in [":", ";"]:
+                    raise RuntimeError("Invalid word name '%s'." % name)
+                subroutine[name] = []
+                while True:
+                    op = it.next()
+                    if op == ";":
+                        subroutine[name].append("return")
+                        break
+                    else:
+                        subroutine[name].append(op)
+            else:
+                output.append(word)
+    except StopIteration:
+        pass
+
+    # Expand all subroutine words to ["<name>", "call"]
+    for name, code in subroutine.items():
+        # For subroutines
+        xcode = []
+        for op in code:
+            xcode.append(op)
+            if op in subroutine:
+                xcode.append("call")
+        subroutine[name] = xcode
+
+    xcode = []
+    for op in output:
+        xcode.append(op)
+        if op in subroutine:
+            xcode.append("call")
+    output = xcode + ["exit"]
+
+    # Add subroutines to output, track their locations
+    location = {}
+    for name, code in subroutine.items():
+        location[name] = len(output)
+        output += code
+
+    # Resolve all subroutine references
+    for i, op in enumerate(output):
+        if op in location:
+            output[i] = location[op]
+
+    if dump_source:
+        revloc = dict(((b,a) for a,b in location.items()))
+        prev = None
+        width = len(str(len(output)))
+        for i, op in enumerate(output):
+            if i in revloc:
+                name = revloc[i]
+                print("\n%s:" % name)
+            if op == "call":
+                print("  %.*d %s (%s)" % (width, i, op, revloc[prev]))
+            else:
+                print("  %.*d %s" % (width, i, op))
+            prev = op
+
+    return output
 
 def constant_fold(code, silent=True):
     """Constant-folds simple expressions like 2 3 + to 5."""
@@ -270,11 +361,18 @@ def constant_fold(code, silent=True):
 
 def repl(optimize=True):
     while True:
-        source = raw_input("> ")
-        code = parse(StringIO(source))
-        if optimize:
-            code = constant_fold(code, silent=False)
-        Machine(code).run()
+        try:
+            source = raw_input("> ")
+            code = translate(parse(StringIO(source)))
+            if optimize:
+                code = constant_fold(code, silent=False)
+            Machine(code).run()
+        except EOFError:
+            return
+        except KeyboardInterrupt:
+            return
+        except Exception, e:
+            print("Error: %s" % e)
 
 if __name__ == "__main__":
     try:
@@ -282,9 +380,11 @@ if __name__ == "__main__":
             repl()
             sys.exit(0)
 
+        dump_source = False
+
         for name in sys.argv[1:]:
             with open(name, "rt") as file:
-                Machine(parse(file)).run()
+                Machine(translate(parse(file), dump_source)).run()
 
     except KeyboardInterrupt:
         pass

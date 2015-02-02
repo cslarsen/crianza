@@ -1,7 +1,7 @@
-"Enter a number: " print read cast_int
-"Enter another number: " print read cast_int
+"Enter a number: " write read cast_int
+"Enter another number: " write read cast_int
 
 over over
 
-"Their sum is: " print + println
-"Their product is: " print * println
+"Their sum is: " write + .
+"Their product is: " write * .

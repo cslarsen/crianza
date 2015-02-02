@@ -1,0 +1,11 @@
+# The Fibonacci Sequence
+
+: println dup . ;
+: next swap over + ;
+
+# Start values
+0 println
+1 println
+
+# Loop forever
+@ next println return
