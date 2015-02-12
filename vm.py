@@ -362,7 +362,10 @@ def translate(code, dump_source=False):
         xcode.append(op)
         if op in subroutine:
             xcode.append("call")
-    output = xcode + ["exit"]
+
+    output = xcode
+    if len(subroutine) > 0:
+        output += ["exit"]
 
     # Add subroutines to output, track their locations
     location = {}
