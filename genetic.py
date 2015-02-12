@@ -61,7 +61,14 @@ class GeneticMachine(vm.Machine):
             return None
 
 def main(num_machines=1000, generations=100000, steps=20, codelen=10,
-        keep_top=100):
+        keep_top=100, mutation_rate=0.05):
+
+    """Attemptes to create a program that puts the number 123 on the top of the
+    stack.
+    """
+
+    print("Using GP to create a program that puts 123 on the ToS.")
+
     def fitfunc(res):
         if isinstance(res, int):
             return abs(123.0 - res)/123.0
@@ -95,7 +102,7 @@ def main(num_machines=1000, generations=100000, steps=20, codelen=10,
 
             # Adds mutations from time to time
             for m in machines:
-                if random.randint(0,999) < 50:
+                if random.random() < mutation_rate:
                     i = random.randint(0, -1+len(m.code))
                     m.code[i] = GeneticMachine([]).randomize().code[0]
 
@@ -108,7 +115,7 @@ def main(num_machines=1000, generations=100000, steps=20, codelen=10,
 
     print("Best 10:")
     for m, result in chosen[0:10]:
-        print("fitness=%f code: %s" % (result, m.code_string))
+        print("fitness=%f tos=%s code: %s" % (result, m.top, m.code_string))
 
 if __name__ == "__main__":
     main()
