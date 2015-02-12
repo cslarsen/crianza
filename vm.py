@@ -5,13 +5,17 @@ from tokenize import *
 import string
 import sys
 
+class MachineError(Exception):
+    pass
+
+
 class Stack:
     def __init__(self):
         self._values = []
 
     def pop(self):
         if len(self._values) == 0:
-            raise RuntimeError("Stack underflow")
+            raise MachineError("Stack underflow")
         return self._values.pop()
 
     def push(self, value):
@@ -21,12 +25,16 @@ class Stack:
     def top(self):
         return self._values[-1]
 
+    def __str__(self):
+        return str(self._values)
+
+    def __len__(self):
+        return len(self._values)
+
 
 class Machine:
     def __init__(self, code, stdout=sys.stdout):
-        self.data_stack = Stack()
-        self.return_stack = Stack()
-        self.instruction_pointer = 0
+        self.reset()
         self.code = code
         self.stdout = stdout
 
@@ -69,6 +77,17 @@ class Machine:
         """Returns the data (operand) stack values."""
         return self.data_stack._values
 
+    def reset(self):
+        self.data_stack = Stack()
+        self.return_stack = Stack()
+        self.instruction_pointer = 0
+        return self
+
+    def __repr__(self):
+        return "<Machine: IP=%d |DS|=%d |RS|=%d |code|=%d>" % (
+            self.instruction_pointer, len(self.data_stack),
+            len(self.return_stack), len(self.code))
+
     def pop(self):
         return self.data_stack.pop()
 
@@ -79,37 +98,52 @@ class Machine:
     def top(self):
         return self.data_stack.top
 
+    def step(self):
+        """Executes one instruction and stops."""
+        instruction = self.code[self.instruction_pointer]
+        self.instruction_pointer += 1
+        self.dispatch(instruction)
+
     def run(self):
         try:
             while self.instruction_pointer < len(self.code):
-                opcode = self.code[self.instruction_pointer]
-                self.instruction_pointer += 1
-                self.dispatch(opcode)
-            return self
+                self.step()
         except StopIteration:
             pass
         except EOFError:
             pass
+        return self
 
     def dispatch(self, op):
+        """Executes one operation by dispatching to a function."""
         if op in self.dispatch_map:
             self.dispatch_map[op]()
+        elif isinstance(op, int):
+            # Push numbers on data stack
+            self.push(op)
+        elif isinstance(op, str) and op[0]==op[-1]=='"':
+            # Push quoted string on data stack
+            self.push(op[1:-1])
         else:
-            if isinstance(op, int):
-                self.push(op) # push numbers on stack
-            elif isinstance(op, str) and op[0]==op[-1]=='"':
-                self.push(op[1:-1]) # push quoted strings on stack
-            else:
-                raise RuntimeError("Unknown opcode: '%s'" % op)
+            raise MachineError("Unknown instruction '%s' at index %d" %
+                    (op, self.instruction_pointer))
 
-    # OPERATIONS FOLLOW:
+    def _assert_int(self, *args):
+        for arg in args:
+            if not (isinstance(arg, int) or isinstance(arg, long)):
+                raise MachineError("Not an integer: %s" % str(arg))
 
     def add(self):
-        self.push(self.pop() + self.pop())
+        a = self.pop()
+        b = self.pop()
+        self._assert_int(a, b)
+        self.push(a + b)
 
     def sub(self):
-        last = self.pop()
-        self.push(self.pop() - last)
+        a = self.pop()
+        b = self.pop()
+        self._assert_int(a, b)
+        self.push(b - a)
 
     def call(self):
         self.return_stack.push(self.instruction_pointer)
@@ -118,16 +152,29 @@ class Machine:
     def return_(self):
         self.instruction_pointer = self.return_stack.pop()
 
-    def mul(self):
-        self.push(self.pop() * self.pop())
+    def mul(self, modulus=None):
+        a = self.pop()
+        b = self.pop()
+        self._assert_int(a, b)
+
+        if modulus is None:
+            self.push(a * b)
+        else:
+            self.push((a * b) % modulus)
 
     def div(self):
-        last = self.pop()
-        self.push(self.pop() / last)
+        divisor = self.pop()
+        dividend = self.pop()
+        self._assert_int(dividend, divisor)
+        if divisor == 0:
+            raise MachineError("Divide by zero")
+        self.push(dividend / divisor)
 
     def mod(self):
-        last = self.pop()
-        self.push(self.pop() % last)
+        a = self.pop()
+        b = self.pop()
+        self._assert_int(a, b)
+        self.push(b % a)
 
     def exit(self):
         raise StopIteration
@@ -160,10 +207,11 @@ class Machine:
     def at(self):
         self.return_stack.push(self.instruction_pointer - 1)
 
-    def dot(self):
+    def dot(self, flush=True):
         self.write()
         self.stdout.write("\n")
-        self.stdout.flush()
+        if flush:
+            self.stdout.flush()
 
     def read(self):
         self.push(raw_input())
@@ -216,7 +264,7 @@ class Machine:
         if isinstance(addr, int) and addr >= 0 and addr < len(self.code):
             self.instruction_pointer = addr
         else:
-            raise RuntimError("JMP address must be a valid integer.")
+            raise MachineError("Jump address must be a valid integer.")
 
     def dump_stack(self):
         self.stdout.write("Data stack:\n")
@@ -229,8 +277,9 @@ class Machine:
 
         self.stdout.flush()
 
-def parse(stream):
 
+def parse(stream):
+    """Parse a Forth-like language and return code."""
     code = []
     tokens = generate_tokens(stream.readline)
 
@@ -359,14 +408,59 @@ def constant_fold(code, silent=True):
                 break
     return code
 
-def repl(optimize=True):
+def print_code(vm, ops_per_line=8):
+    """Prints code and state for VM."""
+    print("IP: %d" % vm.instruction_pointer)
+    print("DS: %s" % str(vm.stack))
+    print("RS: %s" % str(vm.return_stack))
+
+    for addr, op in enumerate(vm.code):
+        if (addr % ops_per_line) == 0 and (addr+1) < len(vm.code):
+            if addr > 0:
+                sys.stdout.write("\n")
+            sys.stdout.write("%0*d  " % (max(4, len(str(len(vm.code)))), addr))
+        sys.stdout.write("%s " % str(op))
+    sys.stdout.write("\n")
+
+
+def repl(optimize=True, persist=True):
+    """Starts a simple REPL for this machine."""
+
+    print("Extra commands for the REPL:")
+    print(".code    - print code")
+    print(".quit    - exit immediately")
+    print(".reset   - reset machine (IP and stacks)")
+    print(".restart - create a clean, new machine")
+    print("")
+
+    machine = Machine([])
+
     while True:
         try:
-            source = raw_input("> ")
+            source = raw_input("> ").strip()
+
+            if source == ".quit":
+                return
+            elif source == ".code":
+                print_code(machine)
+                continue
+            elif source == ".reset":
+                machine.reset()
+                continue
+            elif source == ".restart":
+                machine = Machine([])
+                continue
+
             code = translate(parse(StringIO(source)))
+
             if optimize:
                 code = constant_fold(code, silent=False)
-            Machine(code).run()
+
+            if not persist:
+                machine.reset()
+
+            machine.code += code
+            machine.run()
         except EOFError:
             return
         except KeyboardInterrupt:
