@@ -435,6 +435,16 @@ def constant_fold(code, silent=True):
                 keep_running = True
                 break
 
+            # <c1> <c2> swap -> <c2> <c1>
+            if isconstant(a) and isconstant(b) and c == "swap":
+                del code[i:i+3]
+                code = code[:i] + [b, a] + code[i:]
+                if not silent:
+                    print("Optimizer: Translated %s %s %s to %s %s" %
+                            (a,b,c,b,a))
+                keep_running = True
+                break
+
     return code
 
 def print_code(vm, ops_per_line=8):
