@@ -1,5 +1,12 @@
 """
 Very simple genetic programming example using the virtual machine.
+
+TODO:
+- Crossover should allow this:
+        parent1:    .........
+        parent2:    ---------
+        result:     ..----...
+        instead of: ....-----
 """
 
 import random
@@ -51,9 +58,15 @@ class GeneticMachine(vm.Machine):
             except Exception:
                 if propagate_errors:
                     raise
-                break
-            #except KeyboardInterrupt:
-            #    raise
+
+                # NOTE: if you want programs that may raise exceptions, but
+                # otherwise produce a valid value on the top of the stack, you
+                # "break" here.
+                #
+                # Otherwise, if you want valid programs, "return None" here.
+                # Returning None gives no score for incorrect programs, but is
+                # much slower to converge.
+                return None
 
         if len(self.stack) > 0:
             return self.stack[-1]
