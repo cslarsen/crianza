@@ -399,20 +399,42 @@ def constant_fold(code, silent=True):
 
     arithmetic = ["+", "-", "*", "/", "%", "add", "sub", "mul", "div", "mod"]
 
+    isconstant = lambda c: isinstance(c, int) or isinstance(c, str) or isinstance(c, bool)
+
     keep_running = True
     while keep_running:
         keep_running = False
         # Find two consecutive numbes and an arithmetic operator
-        for i, ops in enumerate(zip(code, code[1:], code[2:])):
-            a, b, op = ops
-            if type(a)==type(b)==int and op in arithmetic:
-                result = Machine(ops).run().top
+        for i, a in enumerate(code):
+            b = code[i+1] if i+1 < len(code) else None
+            c = code[i+2] if i+2 < len(code) else None
+
+            # Constant fold arithmetic operations
+            if isinstance(a, int) and isinstance(b, int) and c in arithmetic:
+                result = Machine([a,b,c]).run().top
                 del code[i:i+3]
                 code.insert(i, result)
-                keep_running = True
                 if not silent:
-                    print("Optimizer: Constant-folded %d %s %d to %d" % (a,op,b,result))
+                    print("Optimizer: Constant-folded %d %d %s to %d" % (a,b,c,result))
+                keep_running = True
                 break
+
+            # Translate <constant> dup to <constant> <constant>
+            if isconstant(a) and b == "dup":
+                code[i+1] = a
+                if not silent:
+                    print("Optimizer: Translated %s %s to %s %s" % (a,b,a,a))
+                keep_running = True
+                break
+
+            # Remove dead code such as <constant> drop
+            if isconstant(a) and b == "drop":
+                del code[i:i+2]
+                if not silent:
+                    print("Optimizer: Removed dead code %s %s" % (a,b))
+                keep_running = True
+                break
+
     return code
 
 def print_code(vm, ops_per_line=8):
