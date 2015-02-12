@@ -9,6 +9,10 @@ class MachineError(Exception):
     pass
 
 
+class ParserError(Exception):
+    pass
+
+
 class Stack:
     def __init__(self):
         self._values = []
@@ -295,7 +299,10 @@ def parse(stream):
     while True:
         for token, value, _, _, _ in tokens:
             if token == NUMBER:
-                code.append(int(value))
+                try:
+                    code.append(int(value))
+                except ValueError, e:
+                    raise ParserError(e)
             elif token in [OP, STRING, NAME]:
                 code.append(value)
             elif token in [NEWLINE, NL]:
@@ -305,7 +312,7 @@ def parse(stream):
             elif token == ENDMARKER:
                 return code
             else:
-                raise RuntimeError("Unknown token %s: '%s'" %
+                raise ParserError("Unknown token %s: '%s'" %
                         (tok_name[token], strip_whitespace(value)))
     return code
 
@@ -324,9 +331,9 @@ def translate(code, dump_source=False):
             if word == ":":
                 name = it.next()
                 if name in builtins:
-                    raise RuntimeError("Cannot shadow internal word definition '%s'." % name)
+                    raise ParserError("Cannot shadow internal word definition '%s'." % name)
                 if name in [":", ";"]:
-                    raise RuntimeError("Invalid word name '%s'." % name)
+                    raise ParserError("Invalid word name '%s'." % name)
                 subroutine[name] = []
                 while True:
                     op = it.next()
@@ -465,6 +472,10 @@ def repl(optimize=True, persist=True):
             return
         except KeyboardInterrupt:
             return
+        except ParserError, e:
+            print("Parser error: %s" % e)
+        except MachineError, e:
+            print("Machine error: %s" % e)
         except Exception, e:
             print("Error: %s" % e)
 
