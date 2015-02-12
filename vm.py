@@ -92,6 +92,17 @@ class Machine:
             self.instruction_pointer, len(self.data_stack),
             len(self.return_stack), len(self.code))
 
+    @property
+    def code_string(self):
+        """Returns code as a parseable string."""
+        s = []
+        for op in self.code:
+            if isinstance(op, str) and op[0]==op[-1]=='"':
+                s.append(repr(op))
+            else:
+                s.append(str(op))
+        return " ".join(s)
+
     def pop(self):
         return self.data_stack.pop()
 
