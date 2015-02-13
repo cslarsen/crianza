@@ -125,20 +125,26 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
 
             # Adds mutations from time to time
             for m in machines:
-                if random.random() < mutation_rate:
+                if random.random() <= mutation_rate:
                     # Mutation consists of changing, inserting or deleting an
                     # instruction
                     kind = random.random()
-                    i = random.randint(0, -1+len(m.code))
-                    op = GeneticMachine([]).randomize().code[0]
+                    if len(m.code) > 1:
+                        i = random.randint(0, len(m.code)-1)
+                    elif len(m.code) > 0:
+                        i = 0
+                    else:
+                        continue
                     if kind <= 0.5:
                         # change
+                        op = GeneticMachine([]).randomize().code[0]
                         m.code[i] = op
                     elif kind <= 0.75:
                         # deletion
                         del m.code[i]
                     else:
                         # insertion
+                        op = GeneticMachine([]).randomize().code[0]
                         m.code.insert(i, op)
 
             # Display results
