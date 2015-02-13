@@ -197,6 +197,8 @@ class Machine(object):
         a = self.pop()
         b = self.pop()
         self._assert_int(a, b)
+        if a == 0:
+            raise MachineError("Divide by zero (modulus)")
         self.push(b % a)
 
     def exit(self):
