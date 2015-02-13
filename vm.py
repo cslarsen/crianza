@@ -13,7 +13,7 @@ class ParserError(Exception):
     pass
 
 
-class Stack:
+class Stack(object):
     def __init__(self):
         self._values = []
 
@@ -36,10 +36,10 @@ class Stack:
         return len(self._values)
 
 
-class Machine:
-    def __init__(self, code, stdout=sys.stdout):
+class Machine(object):
+    def __init__(self, code, stdout=sys.stdout, optimize=True):
         self.reset()
-        self.code = code
+        self._code = code if optimize == False else constant_fold(code)
         self.stdout = stdout
 
         self.dispatch_map = {
@@ -75,6 +75,14 @@ class Machine:
             "true":     self.true_,
             "write":    self.write,
         }
+
+    @property
+    def code(self):
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        self._code = constant_fold(value)
 
     @property
     def stack(self):
@@ -425,7 +433,7 @@ def constant_fold(code, silent=True):
 
             # Constant fold arithmetic operations
             if isinstance(a, int) and isinstance(b, int) and c in arithmetic:
-                result = Machine([a,b,c]).run().top
+                result = Machine([a,b,c], optimize=False).run().top
                 del code[i:i+3]
                 code.insert(i, result)
                 if not silent:

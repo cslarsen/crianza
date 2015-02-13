@@ -16,9 +16,8 @@ import vm
 
 class GeneticMachine(vm.Machine):
     """A really simple machine for genetic programming."""
-
     def __init__(self, code=[]):
-        vm.Machine.__init__(self, code)
+        super(GeneticMachine, self).__init__(code)
 
     def randomize(self, min_code_length=10, max_code_length=10, maxabsint=9999,
             maxstrlen=10, excluded_ops=[".", "exit", "read", "write", "stack"]):
