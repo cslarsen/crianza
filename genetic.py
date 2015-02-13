@@ -1,6 +1,8 @@
 """
 Very simple genetic programming example using the virtual machine.
 
+Tip: Run with pypy for speed.
+
 TODO:
 - Crossover should allow this:
         parent1:    .........
@@ -77,7 +79,7 @@ class GeneticMachine(vm.Machine):
 
 # TODO:
 def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
-        keep_top=100, mutation_rate=0.05):
+        keep_top=50, mutation_rate=0.075):
 
     """Attemptes to create a program that puts the number 123 on the top of the
     stack.
@@ -125,6 +127,7 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
                     break
 
             # Adds mutations from time to time
+            mutations = 0
             for m in machines:
                 if random.random() <= mutation_rate:
                     # Mutation consists of changing, inserting or deleting an
@@ -140,21 +143,24 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
                         # change
                         op = GeneticMachine([]).randomize().code[0]
                         m.code[i] = op
+                        mutations += 1
                     elif kind <= 0.75:
                         # deletion
                         del m.code[i]
+                        mutations += 1
                     else:
                         # insertion
                         op = GeneticMachine([]).randomize().code[0]
                         m.code.insert(i, op)
+                        mutations += 1
 
             # Display results
             chosen = [(orig[i], result) for result, i in fitness[:keep_top]]
             avg = sum(res for (m,(res,slen,codelen)) in chosen)/float(len(chosen))
             avglen = sum(codelen for (m,(res,slen,codelen)) in chosen)/float(len(chosen))
             slen = sum(slen for (m,(res,slen,codelen)) in chosen)/float(len(chosen))
-            print("Gen %d: machines=%d avg_fitness=%.7f avg_slen=%.7f avg_codelen=%.7f" %
-                    (no, len(orig), avg, slen, avglen))
+            print("Generation %d fitness %.7f stack length %.2f code length %.2f mutations %d" %
+                    (no, avg, slen, avglen, mutations))
 
             if avg == 0.0 and avglen < 2:
                 print("Stopping because avg==0 and avglen<2.")
