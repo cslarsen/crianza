@@ -87,13 +87,16 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
     print("Using GP to create a program that puts 123 on the ToS.")
 
     def fitfunc(vm):
+        slen = len(vm.stack)
+        default = 9999.9, slen, len(vm.code)
+
         # Machines with no code should not live to next generation
         if len(vm.stack) > 0 and len(vm.code) > 0:
             tos = vm.top
             if isinstance(tos, int):
                 distance = abs(123.0 - tos)/123.0
-                return distance, len(vm.code)
-        return 9999.9, len(vm.code)
+                return distance, slen, len(vm.code)
+        return default
 
     machines = [GeneticMachine().randomize(1, max_codelen) for n in xrange(0,num_machines)]
 
@@ -141,10 +144,11 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
 
             # Display results
             chosen = [(orig[i], result) for result, i in fitness[:keep_top]]
-            avg = sum(res for (m,(res,codelen)) in chosen)/float(len(chosen))
-            avglen = sum(codelen for (m,(res,codelen)) in chosen)/float(len(chosen))
-            print("Gen %d: machines=%d avg_fitness=%.7f avg_codelen=%.7f" %
-                    (no, len(orig), avg, avglen))
+            avg = sum(res for (m,(res,slen,codelen)) in chosen)/float(len(chosen))
+            avglen = sum(codelen for (m,(res,slen,codelen)) in chosen)/float(len(chosen))
+            slen = sum(slen for (m,(res,slen,codelen)) in chosen)/float(len(chosen))
+            print("Gen %d: machines=%d avg_fitness=%.7f avg_slen=%.7f avg_codelen=%.7f" %
+                    (no, len(orig), avg, slen, avglen))
 
             if avg == 0.0 and avglen < 2:
                 print("Stopping because avg==0 and avglen<2.")
@@ -153,9 +157,9 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
         pass
 
     print("Best 10:")
-    for m, (result, codelen) in chosen[0:10]:
-        print("fitness=%f tos=%s len=%d code: %s" % (result, m.top,
-            len(m.code), m.code_string))
+    for m, (result, slen, codelen) in chosen[0:10]:
+        print("fitness=%f tos=%s slen=%d len=%d code: %s" % (result, m.top,
+            slen, len(m.code), m.code_string))
 
 if __name__ == "__main__":
     main()
