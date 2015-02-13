@@ -1,1 +1,3 @@
-Cannot parse negative numbers, e.g. "-123" is parsed as "- 123"
+vm: cannot parse negative numbers, e.g. "-123" is parsed as "- 123"
+genetic: crossover subregions, not from start to end
+genetic: higher score to shorter programs
