@@ -433,6 +433,13 @@ def constant_fold(code, silent=True):
 
             # Constant fold arithmetic operations
             if isinstance(a, int) and isinstance(b, int) and c in arithmetic:
+                # Although we can detect division by zero at compile time, we
+                # don't report it here, because the surrounding system doesn't
+                # handle that very well. So just leave it for now.  (NOTE: If
+                # we had an "error" instruction, we could actually transform
+                # the expression to an error, or exit instruction perhaps)
+                if c in ["div", "/"] and b == 0:
+                    continue
                 result = Machine([a,b,c], optimize=False).run().top
                 del code[i:i+3]
                 code.insert(i, result)
