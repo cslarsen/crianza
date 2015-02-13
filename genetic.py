@@ -87,14 +87,15 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
 
     def fitfunc(vm):
         slen = len(vm.stack)
-        default = 9999.9, slen, len(vm.code)
+        rlen = len(vm.return_stack)
+        default = 9999.9, slen + rlen, len(vm.code)
 
         # Machines with no code should not live to next generation
         if len(vm.stack) > 0 and len(vm.code) > 0:
             tos = vm.top
             if isinstance(tos, int):
                 distance = abs(123.0 - tos)/123.0
-                return distance, slen, len(vm.code)
+                return distance, slen + rlen, len(vm.code)
         return default
 
     machines = [GeneticMachine().randomize(1, max_codelen) for n in xrange(0,num_machines)]
