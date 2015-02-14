@@ -27,7 +27,7 @@ class GeneticMachine(vm.Machine):
         self.code = []
 
         # Remove some commands we don't wand the machine to include
-        ops = self.dispatch_map
+        ops = self.instructions
         for op in excluded_ops:
             del ops[op]
 

@@ -42,7 +42,7 @@ class Machine(object):
         self._code = code if optimize == False else constant_fold(code)
         self.stdout = stdout
 
-        self.dispatch_map = {
+        self.instructions = {
             "%":        self.mod,
             "*":        self.mul,
             "+":        self.add,
@@ -139,8 +139,8 @@ class Machine(object):
 
     def dispatch(self, op):
         """Executes one operation by dispatching to a function."""
-        if op in self.dispatch_map:
-            self.dispatch_map[op]()
+        if op in self.instructions:
+            self.instructions[op]()
         elif isinstance(op, int):
             # Push numbers on data stack
             self.push(op)
@@ -343,7 +343,7 @@ def translate(code, dump_source=False):
 
     output = []
     subroutine = {}
-    builtins = Machine([]).dispatch_map
+    builtins = Machine([]).instructions
 
     try:
         it = code.__iter__()
