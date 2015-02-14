@@ -386,8 +386,7 @@ def parse(stream):
     return code
 
 def compile(code, silent=True, ignore_errors=False, optimize_code=True):
-    """Translates stuff such as subroutines etc into a complete working
-    code."""
+    """Translates subroutine-forms into a complete working code."""
 
     output = []
     subroutine = {}
@@ -439,11 +438,18 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
     if len(subroutine) > 0:
         output += ["exit"]
 
+    # Optimize main code
+    if optimize_code:
+        output = optimize(output, ignore_errors=False)
+
     # Add subroutines to output, track their locations
     location = {}
     for name, code in subroutine.items():
         location[name] = len(output)
-        output += code
+        if optimize_code:
+            output += optimize(code, ignore_errors=False)
+        else:
+            output += code
 
     # Resolve all subroutine references
     for i, op in enumerate(output):
@@ -464,7 +470,18 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
     arithmetic = ["+", "-", "*", "/", "%", "add", "sub", "mul", "div", "mod"]
 
-    isconstant = lambda c: isinstance(c, int) or isinstance(c, str) or isinstance(c, bool)
+    def isstring(c):
+        return isinstance(c, str) and c[0]==c[-1]=='"'
+
+    def isnumber(c):
+        return isinstance(c, int) or isinstance(c, long) or isinstance(c,
+                float)
+
+    def isbool(c):
+        return isinstance(c, bool)
+
+    def isconstant(c):
+        return isbool(c) or isnumber(c) or isstring(c)
 
     keep_running = True
     while keep_running:
@@ -475,7 +492,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
             c = code[i+2] if i+2 < len(code) else None
 
             # Constant fold arithmetic operations
-            if isinstance(a, int) and isinstance(b, int) and c in arithmetic:
+            if isnumber(a) and isnumber(b) and c in arithmetic:
                 # Although we can detect division by zero at compile time, we
                 # don't report it here, because the surrounding system doesn't
                 # handle that very well. So just leave it for now.  (NOTE: If
@@ -487,11 +504,15 @@ def constant_fold(code, silent=True, ignore_errors=True):
                     else:
                         raise CompilationError(
                                 ZeroDivisionError("Division by zero"))
+
+                # Calculate result by running on a machine
                 result = Machine([a,b,c], optimize_code=False).run().top
                 del code[i:i+3]
                 code.insert(i, result)
+
                 if not silent:
                     print("Optimizer: Constant-folded %d %d %s to %d" % (a,b,c,result))
+
                 keep_running = True
                 break
 
