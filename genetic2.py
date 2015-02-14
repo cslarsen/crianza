@@ -175,7 +175,7 @@ class GeneticMachine(vm.Machine):
 
 
 def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
-        machines=1000, survival_rate=0.2, mutation_rate=0.075):
+        machines=1000, survival_rate=0.05, mutation_rate=0.075):
 
     """Creates a bunch of machines, runs them for a number of steps and then
     gives them a fitness score.  The best produce offspring that are passed on
@@ -214,10 +214,11 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
         mutation_rate: Rate for each machine's chance of being mutated.
     """
     generation = [MachineClass().randomize() for n in xrange(machines)]
+    survivors = generation
 
     try:
         iterations = 0
-        while not stop_function(iterations, generation):
+        while not stop_function(iterations, survivors):
             iterations += 1
 
             # Run all machines in this generation
@@ -243,15 +244,15 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
                 if random.random() > mutation_rate:
                     m.mutate()
 
-            print("gen %d fitness %.12f code %.2f stacks %.2f" % (iterations,
+            print("gen %d 1-fitness %.12f avg code len %.2f avg stack len %.2f" % (
+                iterations,
                 average(survivors, lambda m: m.score()),
                 average(survivors, lambda m: len(m.code)),
                 average(survivors, lambda m: len(m.stack) + len(m.return_stack))))
     except KeyboardInterrupt:
-        print("Best:")
-        generation = sorted(generation, key=lambda m: m.score())
-        for n in xrange(min(10, len(generation))):
-            print("%s: %s" % (generation[n], generation[n].code_string))
+        pass
+
+    return survivors
 
 def create_genetic_class(name, score_function):
     class __Foo(GeneticMachine):
@@ -264,7 +265,7 @@ def create_genetic_class(name, score_function):
         def __str__(self):
             return "<%s %s>" % (name, repr(self))
 
-        score = score_function
+    __Foo.score = score_function
     __Foo.__name__ == name
     return __Foo
 
@@ -279,18 +280,22 @@ if __name__ == "__main__":
         def score(self):
             top = self.top if vm.isnumber(self.top) else 9999.9
             actual = (top,
-                      0 if self._error else 1,
+                      1000 if self._error else 0,
                       len(self.stack),
                       len(self.return_stack),
                       len(self.code))
-            wanted = (123, 1, 1, 0, 1)
-            weights = (0.10, 0.84, 0.02, 0.02, 0.02)
+            wanted = (123, 0, 1, 0, 1)
+            weights = (0.10, 0.80, 0.02, 0.02, 0.06)
 
             return 1.0 - weighted_tanimoto(actual, wanted, weights)
 
     def stop123(its, generation):
-        best = sorted(generation, key=lambda m: m.score())[:10]
+        best = sorted(generation, key=lambda m: m.score())#[:10]
         return average(best, lambda s: s.score()) == 0.0 and \
-               0 < average(best, lambda s: len(s.code)) <= 2
+               0 <= average(best, lambda s: len(s.code)) < 1.25
 
-    iterate(Calc123, stop_function=stop123)
+    survivors = iterate(Calc123, stop_function=stop123)
+
+    print("Best programs:")
+    for m in survivors[:min(15, len(survivors))]:
+        print("%s: %s" % (m, m.code_string))
