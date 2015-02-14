@@ -4,7 +4,6 @@ A simple stack-based virtual machine that you can add your own instructions to.
 
 from StringIO import StringIO
 from tokenize import *
-import string
 import sys
 
 
