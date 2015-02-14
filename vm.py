@@ -5,11 +5,14 @@ from tokenize import *
 import string
 import sys
 
+
 class MachineError(Exception):
     pass
 
-
 class ParserError(Exception):
+    pass
+
+class CompilationError(Exception):
     pass
 
 
@@ -32,48 +35,235 @@ class Stack(object):
     def __str__(self):
         return str(self._values)
 
+    def __repr__(self):
+        return "<Stack: values=%s>" % self._values
+
     def __len__(self):
         return len(self._values)
 
 
+class Instruction(object):
+    """A collection of useful instructions default to each newly created
+    Machine."""
+
+    @staticmethod
+    def _assert_number(*args):
+        for arg in args:
+            if not (isinstance(arg, int) or isinstance(arg, long)):
+                raise MachineError("Not an integer: %s" % str(arg))
+
+    @staticmethod
+    def add(vm):
+        a = vm.pop()
+        b = vm.pop()
+        Instruction._assert_number(a, b)
+        vm.push(a + b)
+
+    @staticmethod
+    def sub(vm):
+        a = vm.pop()
+        b = vm.pop()
+        Instruction._assert_number(a, b)
+        vm.push(b - a)
+
+    @staticmethod
+    def call(vm):
+        vm.return_stack.push(vm.instruction_pointer)
+        vm.jmp()
+
+    @staticmethod
+    def return_(vm):
+        vm.instruction_pointer = vm.return_stack.pop()
+
+    @staticmethod
+    def mul(vm, modulus=None):
+        a = vm.pop()
+        b = vm.pop()
+        Instruction._assert_number(a, b)
+
+        if modulus is None:
+            vm.push(a * b)
+        else:
+            vm.push((a * b) % modulus)
+
+    @staticmethod
+    def div(vm):
+        divisor = vm.pop()
+        dividend = vm.pop()
+        Instruction._assert_number(dividend, divisor)
+        if divisor == 0:
+            raise MachineError(ZeroDivisionError("Division by zero"))
+        vm.push(dividend / divisor)
+
+    @staticmethod
+    def mod(vm):
+        a = vm.pop()
+        b = vm.pop()
+        Instruction._assert_number(a, b)
+        if a == 0:
+            raise MachineError(ZeroDivisionError("Division by zero"))
+        vm.push(b % a)
+
+    @staticmethod
+    def exit(vm):
+        raise StopIteration
+
+    @staticmethod
+    def dup(vm):
+        a = vm.pop()
+        vm.push(a)
+        vm.push(a)
+
+    @staticmethod
+    def over(vm):
+        b = vm.pop()
+        a = vm.pop()
+        vm.push(a)
+        vm.push(b)
+        vm.push(a)
+
+    @staticmethod
+    def drop(vm):
+        vm.pop()
+
+    @staticmethod
+    def swap(vm):
+        b = vm.pop()
+        a = vm.pop()
+        vm.push(b)
+        vm.push(a)
+
+    @staticmethod
+    def write(vm):
+        vm.output.write(str(vm.pop()))
+        vm.output.flush()
+
+    @staticmethod
+    def at(vm):
+        vm.return_stack.push(vm.instruction_pointer - 1)
+
+    @staticmethod
+    def dot(vm, flush=True):
+        vm.write()
+        vm.output.write("\n")
+        if flush:
+            vm.output.flush()
+
+    @staticmethod
+    def read(vm):
+        vm.push(raw_input())
+
+    @staticmethod
+    def cast_int(vm):
+        vm.push(int(vm.pop()))
+
+    @staticmethod
+    def cast_str(vm):
+        vm.push(str(vm.pop()))
+
+    @staticmethod
+    def eq(vm):
+        vm.push(vm.pop() == vm.pop())
+
+    @staticmethod
+    def less(vm):
+        a = vm.pop()
+        vm.push(a < vm.pop())
+
+    @staticmethod
+    def greater(vm):
+        a = vm.pop()
+        vm.push(a > vm.pop())
+
+    @staticmethod
+    def true_(vm):
+        vm.push(True)
+
+    @staticmethod
+    def false_(vm):
+        vm.push(False)
+
+    @staticmethod
+    def if_stmt(vm):
+        false_clause = vm.pop()
+        true_clause = vm.pop()
+        test = vm.pop()
+
+        # False values: False, 0, "", everyting else is true
+        if isinstance(test, bool) and test == False:
+            result = False
+        elif isinstance(test, str) and len(test) == 0:
+            result = False
+        elif isinstance(test, int) and test == 0:
+            result = False
+        else:
+            result = True
+
+        if result == True:
+            vm.push(true_clause)
+        else:
+            vm.push(false_clause)
+
+    @staticmethod
+    def jmp(vm):
+        addr = vm.pop()
+        if isinstance(addr, int) and addr >= 0 and addr < len(vm.code):
+            vm.instruction_pointer = addr
+        else:
+            raise MachineError("Jump address must be a valid integer.")
+
+    @staticmethod
+    def dump_stack(vm):
+        vm.output.write("Data stack:\n")
+        for v in reversed(vm.data_stack._values):
+            vm.output.write(" - type %s, value '%s'\n" % (type(v), v))
+
+        vm.output.write("Return stack:\n")
+        for v in reversed(vm.return_stack._values):
+            vm.output.write(" - address %s\n" % str(v))
+
+        vm.output.flush()
+
+
 class Machine(object):
-    def __init__(self, code, stdout=sys.stdout, optimize=True):
+    """A virtual machine engine."""
+    def __init__(self, code, output=sys.stdout, optimize=True):
         self.reset()
         self._code = code if optimize == False else constant_fold(code)
-        self.stdout = stdout
+        self.output = output
 
         self.instructions = {
-            "%":        self.mod,
-            "*":        self.mul,
-            "+":        self.add,
-            "-":        self.sub,
-            ".":        self.dot,
-            "/":        self.div,
-            "<":        self.less,
-            "==":       self.eq,
-            ">":        self.greater,
-            "@":        self.at,
-            "add":      self.add,
-            "call":     self.call,
-            "cast_int": self.cast_int,
-            "cast_str": self.cast_str,
-            "div":      self.div,
-            "drop":     self.drop,
-            "dup":      self.dup,
-            "exit":     self.exit,
-            "false":    self.false_,
-            "if":       self.if_stmt,
-            "jmp":      self.jmp,
-            "mod":      self.mod,
-            "mul":      self.mul,
-            "over":     self.over,
-            "read":     self.read,
-            "return":   self.return_,
-            "stack":    self.dump_stack,
-            "sub":      self.sub,
-            "swap":     self.swap,
-            "true":     self.true_,
-            "write":    self.write,
+            "%":        Instruction.mod,
+            "*":        Instruction.mul,
+            "+":        Instruction.add,
+            "-":        Instruction.sub,
+            ".":        Instruction.dot,
+            "/":        Instruction.div,
+            "<":        Instruction.less,
+            "==":       Instruction.eq,
+            ">":        Instruction.greater,
+            "@":        Instruction.at,
+            "add":      Instruction.add,
+            "call":     Instruction.call,
+            "cast_int": Instruction.cast_int,
+            "cast_str": Instruction.cast_str,
+            "div":      Instruction.div,
+            "drop":     Instruction.drop,
+            "dup":      Instruction.dup,
+            "exit":     Instruction.exit,
+            "false":    Instruction.false_,
+            "if":       Instruction.if_stmt,
+            "jmp":      Instruction.jmp,
+            "mod":      Instruction.mod,
+            "mul":      Instruction.mul,
+            "over":     Instruction.over,
+            "read":     Instruction.read,
+            "return":   Instruction.return_,
+            "stack":    Instruction.dump_stack,
+            "sub":      Instruction.sub,
+            "swap":     Instruction.swap,
+            "true":     Instruction.true_,
+            "write":    Instruction.write,
         }
 
     @property
@@ -140,7 +330,8 @@ class Machine(object):
     def dispatch(self, op):
         """Executes one operation by dispatching to a function."""
         if op in self.instructions:
-            self.instructions[op]()
+            instruction = self.instructions[op]
+            instruction(self)
         elif isinstance(op, int):
             # Push numbers on data stack
             self.push(op)
@@ -150,157 +341,6 @@ class Machine(object):
         else:
             raise MachineError("Unknown instruction '%s' at index %d" %
                     (op, self.instruction_pointer))
-
-    def _assert_int(self, *args):
-        for arg in args:
-            if not (isinstance(arg, int) or isinstance(arg, long)):
-                raise MachineError("Not an integer: %s" % str(arg))
-
-    def add(self):
-        a = self.pop()
-        b = self.pop()
-        self._assert_int(a, b)
-        self.push(a + b)
-
-    def sub(self):
-        a = self.pop()
-        b = self.pop()
-        self._assert_int(a, b)
-        self.push(b - a)
-
-    def call(self):
-        self.return_stack.push(self.instruction_pointer)
-        self.jmp()
-
-    def return_(self):
-        self.instruction_pointer = self.return_stack.pop()
-
-    def mul(self, modulus=None):
-        a = self.pop()
-        b = self.pop()
-        self._assert_int(a, b)
-
-        if modulus is None:
-            self.push(a * b)
-        else:
-            self.push((a * b) % modulus)
-
-    def div(self):
-        divisor = self.pop()
-        dividend = self.pop()
-        self._assert_int(dividend, divisor)
-        if divisor == 0:
-            raise MachineError("Divide by zero")
-        self.push(dividend / divisor)
-
-    def mod(self):
-        a = self.pop()
-        b = self.pop()
-        self._assert_int(a, b)
-        if a == 0:
-            raise MachineError("Divide by zero (modulus)")
-        self.push(b % a)
-
-    def exit(self):
-        raise StopIteration
-
-    def dup(self):
-        a = self.pop()
-        self.push(a)
-        self.push(a)
-
-    def over(self):
-        b = self.pop()
-        a = self.pop()
-        self.push(a)
-        self.push(b)
-        self.push(a)
-
-    def drop(self):
-        self.pop()
-
-    def swap(self):
-        b = self.pop()
-        a = self.pop()
-        self.push(b)
-        self.push(a)
-
-    def write(self):
-        self.stdout.write(str(self.pop()))
-        self.stdout.flush()
-
-    def at(self):
-        self.return_stack.push(self.instruction_pointer - 1)
-
-    def dot(self, flush=True):
-        self.write()
-        self.stdout.write("\n")
-        if flush:
-            self.stdout.flush()
-
-    def read(self):
-        self.push(raw_input())
-
-    def cast_int(self):
-        self.push(int(self.pop()))
-
-    def cast_str(self):
-        self.push(str(self.pop()))
-
-    def eq(self):
-        self.push(self.pop() == self.pop())
-
-    def less(self):
-        a = self.pop()
-        self.push(a < self.pop())
-
-    def greater(self):
-        a = self.pop()
-        self.push(a > self.pop())
-
-    def true_(self):
-        self.push(True)
-
-    def false_(self):
-        self.push(False)
-
-    def if_stmt(self):
-        false_clause = self.pop()
-        true_clause = self.pop()
-        test = self.pop()
-
-        # False values: False, 0, "", everyting else is true
-        if isinstance(test, bool) and test == False:
-            result = False
-        elif isinstance(test, str) and len(test) == 0:
-            result = False
-        elif isinstance(test, int) and test == 0:
-            result = False
-        else:
-            result = True
-
-        if result == True:
-            self.push(true_clause)
-        else:
-            self.push(false_clause)
-
-    def jmp(self):
-        addr = self.pop()
-        if isinstance(addr, int) and addr >= 0 and addr < len(self.code):
-            self.instruction_pointer = addr
-        else:
-            raise MachineError("Jump address must be a valid integer.")
-
-    def dump_stack(self):
-        self.stdout.write("Data stack:\n")
-        for v in reversed(self.data_stack._values):
-            self.stdout.write(" - type %s, value '%s'\n" % (type(v), v))
-
-        self.stdout.write("Return stack:\n")
-        for v in reversed(self.return_stack._values):
-            self.stdout.write(" - address %s\n" % str(v))
-
-        self.stdout.flush()
 
 
 def parse(stream):
@@ -415,7 +455,7 @@ def translate(code, dump_source=False):
 
     return output
 
-def constant_fold(code, silent=True):
+def constant_fold(code, silent=True, ignore_errors=True):
     """Constant-folds simple expressions like 2 3 + to 5."""
 
     # Loop until we haven't done any optimizations.  E.g., "2 3 + 5 *" will be
@@ -440,8 +480,12 @@ def constant_fold(code, silent=True):
                 # handle that very well. So just leave it for now.  (NOTE: If
                 # we had an "error" instruction, we could actually transform
                 # the expression to an error, or exit instruction perhaps)
-                if c in ["%", "mod", "div", "/"] and b == 0:
-                    continue
+                if b==0 and c in ["%", "mod", "div", "/"]:
+                    if ignore_errors:
+                        continue
+                    else:
+                        raise CompilationError(
+                                ZeroDivisionError("Division by zero"))
                 result = Machine([a,b,c], optimize=False).run().top
                 del code[i:i+3]
                 code.insert(i, result)
@@ -541,6 +585,7 @@ def repl(optimize=True, persist=True):
             print("Machine error: %s" % e)
         except Exception, e:
             print("Error: %s" % e)
+
 
 if __name__ == "__main__":
     try:

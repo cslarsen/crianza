@@ -1,7 +1,7 @@
 from operator import *
 import unittest
 
-from vm import Machine, constant_fold
+from vm import Machine, constant_fold, MachineError, CompilationError
 
 class TestVM(unittest.TestCase):
     def test_initial_conditions(self):
@@ -22,6 +22,10 @@ class TestVM(unittest.TestCase):
                 for op in ops:
                     self._test_arithmetic(a, b, op)
 
+    def test_errors(self):
+        with self.assertRaises(CompilationError):
+            constant_fold([2, 0, "/"], ignore_errors=False)
+
     def test_optimizer(self):
         self.assertEqual(constant_fold([2,3,"*","."]), [6,"."])
         self.assertEqual(constant_fold([2,2,3,"*","."]), [2,6,"."])
@@ -29,6 +33,7 @@ class TestVM(unittest.TestCase):
         self.assertEqual(constant_fold([5,2,3,"*","+",4,"*","."]), [44,"."])
         self.assertEqual(constant_fold([2, 3, "+", 5, "*", "println"]),
                 [25, "println"])
+        self.assertEqual(constant_fold([10, "dup"]), [10, 10])
 
 
 if __name__ == "__main__":
