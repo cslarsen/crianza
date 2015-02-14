@@ -69,7 +69,7 @@ class Instruction(object):
     @staticmethod
     def call(vm):
         vm.return_stack.push(vm.instruction_pointer)
-        vm.jmp()
+        Instruction.jmp(vm)
 
     @staticmethod
     def return_(vm):
@@ -134,9 +134,10 @@ class Instruction(object):
         vm.push(a)
 
     @staticmethod
-    def write(vm):
+    def write(vm, flush=True):
         vm.output.write(str(vm.pop()))
-        vm.output.flush()
+        if flush:
+            vm.output.flush()
 
     @staticmethod
     def at(vm):
@@ -144,7 +145,7 @@ class Instruction(object):
 
     @staticmethod
     def dot(vm, flush=True):
-        vm.write()
+        Instruction.write(vm, flush=False)
         vm.output.write("\n")
         if flush:
             vm.output.flush()
@@ -206,11 +207,12 @@ class Instruction(object):
 
     @staticmethod
     def jmp(vm):
-        addr = vm.pop()
-        if isinstance(addr, int) and addr >= 0 and addr < len(vm.code):
-            vm.instruction_pointer = addr
+        address = vm.pop()
+        if isinstance(address, int) and (0 <= address < len(vm.code)):
+            vm.instruction_pointer = address
         else:
-            raise MachineError("Jump address must be a valid integer.")
+            raise MachineError("Jump addressess must be a valid integer: %s" %
+                    str(address))
 
     @staticmethod
     def dump_stack(vm):
@@ -227,9 +229,9 @@ class Instruction(object):
 
 class Machine(object):
     """A virtual machine engine."""
-    def __init__(self, code, output=sys.stdout, optimize=True):
+    def __init__(self, code, output=sys.stdout, optimize_code=True):
         self.reset()
-        self._code = code if optimize == False else constant_fold(code)
+        self._code = code if optimize_code == False else optimize(code)
         self.output = output
 
         self.instructions = {
@@ -272,7 +274,7 @@ class Machine(object):
 
     @code.setter
     def code(self, value):
-        self._code = constant_fold(value)
+        self._code = optimize(value)
 
     @property
     def stack(self):
@@ -289,6 +291,9 @@ class Machine(object):
         return "<Machine: IP=%d |DS|=%d |RS|=%d |code|=%d>" % (
             self.instruction_pointer, len(self.data_stack),
             len(self.return_stack), len(self.code))
+
+    def __str__(self):
+        return self.__repr__()
 
     @property
     def code_string(self):
@@ -377,7 +382,7 @@ def parse(stream):
                         (tok_name[token], strip_whitespace(value)))
     return code
 
-def translate(code, dump_source=False):
+def compile(code, silent=True, ignore_errors=False, optimize_code=True):
     """Translates stuff such as subroutines etc into a complete working
     code."""
 
@@ -392,9 +397,9 @@ def translate(code, dump_source=False):
             if word == ":":
                 name = it.next()
                 if name in builtins:
-                    raise ParserError("Cannot shadow internal word definition '%s'." % name)
+                    raise CompilationError("Cannot shadow internal word definition '%s'." % name)
                 if name in [":", ";"]:
-                    raise ParserError("Invalid word name '%s'." % name)
+                    raise CopmilationError("Invalid word name '%s'." % name)
                 subroutine[name] = []
                 while True:
                     op = it.next()
@@ -418,12 +423,15 @@ def translate(code, dump_source=False):
                 xcode.append("call")
         subroutine[name] = xcode
 
+    # Add main code (code outside of subroutines)
     xcode = []
     for op in output:
         xcode.append(op)
         if op in subroutine:
             xcode.append("call")
 
+    # Because main code comes before subroutines, we need to explicitly add an
+    # exit instruction
     output = xcode
     if len(subroutine) > 0:
         output += ["exit"]
@@ -439,21 +447,11 @@ def translate(code, dump_source=False):
         if op in location:
             output[i] = location[op]
 
-    if dump_source:
-        revloc = dict(((b,a) for a,b in location.items()))
-        prev = None
-        width = len(str(len(output)))
-        for i, op in enumerate(output):
-            if i in revloc:
-                name = revloc[i]
-                print("\n%s:" % name)
-            if op == "call":
-                print("  %.*d %s (%s)" % (width, i, op, revloc[prev]))
-            else:
-                print("  %.*d %s" % (width, i, op))
-            prev = op
-
     return output
+
+def optimize(code, silent=True, ignore_errors=True):
+    """Performs optimizations on already parsed code."""
+    return constant_fold(code, silent=silent, ignore_errors=ignore_errors)
 
 def constant_fold(code, silent=True, ignore_errors=True):
     """Constant-folds simple expressions like 2 3 + to 5."""
@@ -486,7 +484,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                     else:
                         raise CompilationError(
                                 ZeroDivisionError("Division by zero"))
-                result = Machine([a,b,c], optimize=False).run().top
+                result = Machine([a,b,c], optimize_code=False).run().top
                 del code[i:i+3]
                 code.insert(i, result)
                 if not silent:
@@ -537,7 +535,7 @@ def print_code(vm, ops_per_line=8):
     sys.stdout.write("\n")
 
 
-def repl(optimize=True, persist=True):
+def repl(optimize_code=True, persist=True):
     """Starts a simple REPL for this machine."""
 
     print("Extra commands for the REPL:")
@@ -565,10 +563,10 @@ def repl(optimize=True, persist=True):
                 machine = Machine([])
                 continue
 
-            code = translate(parse(StringIO(source)))
+            code = compile(parse(StringIO(source)))
 
-            if optimize:
-                code = constant_fold(code, silent=False)
+            if optimize_code:
+                code = optimize(code, silent=False)
 
             if not persist:
                 machine.reset()
@@ -593,11 +591,11 @@ if __name__ == "__main__":
             repl()
             sys.exit(0)
 
-        dump_source = False
-
         for name in sys.argv[1:]:
             with open(name, "rt") as file:
-                Machine(translate(parse(file), dump_source)).run()
+                code = parse(file)
+                code = compile(code, silent=True, ignore_errors=False)
+                Machine(code, optimize_code=False).run()
 
     except KeyboardInterrupt:
         pass
