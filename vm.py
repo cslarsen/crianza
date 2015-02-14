@@ -55,6 +55,19 @@ class Instruction(object):
                 raise MachineError("Not an integer: %s" % str(arg))
 
     @staticmethod
+    def _assert_bool(*args):
+        for arg in args:
+            if not isinstance(arg, bool):
+                raise MachineError("Not a boolean: %s" % str(arg))
+
+    @staticmethod
+    def _assert_binary(*args):
+        for arg in args:
+            if not (isinstance(arg, bool) or isinstance(arg, int) or
+                    isinstance(arg, long)):
+                raise MachineError("Not boolean or numerical: %s" % str(arg))
+
+    @staticmethod
     def add(vm):
         a = vm.pop()
         b = vm.pop()
@@ -232,6 +245,39 @@ class Instruction(object):
 
         vm.output.flush()
 
+    @staticmethod
+    def binary_and(vm):
+        a = vm.pop()
+        b = vm.pop()
+        Instruction._assert_binary(a, b)
+        vm.push(b & a)
+
+    @staticmethod
+    def binary_or(vm):
+        a = vm.pop()
+        b = vm.pop()
+        Instruction._assert_binary(a, b)
+        vm.push(b | a)
+
+    @staticmethod
+    def binary_xor(vm):
+        a = vm.pop()
+        b = vm.pop()
+        Instruction._assert_binary(a, b)
+        vm.push(b ^ a)
+
+    @staticmethod
+    def unary_complement(vm):
+        a = vm.pop()
+        Instruction._assert_binary(a)
+        vm.push(~a)
+
+    @staticmethod
+    def unary_not(vm):
+        a = vm.pop()
+        Instruction._assert_bool(a)
+        vm.push(not a)
+
 
 class Machine(object):
     """A virtual machine engine."""
@@ -252,6 +298,7 @@ class Machine(object):
             ">":        Instruction.greater,
             "@":        Instruction.at,
             "add":      Instruction.add,
+            "and":      Instruction.binary_and,
             "call":     Instruction.call,
             "cast_int": Instruction.cast_int,
             "cast_str": Instruction.cast_str,
@@ -264,6 +311,8 @@ class Machine(object):
             "jmp":      Instruction.jmp,
             "mod":      Instruction.mod,
             "mul":      Instruction.mul,
+            "not":      Instruction.unary_not,
+            "or":      Instruction.binary_or,
             "over":     Instruction.over,
             "read":     Instruction.read,
             "return":   Instruction.return_,
@@ -272,6 +321,8 @@ class Machine(object):
             "swap":     Instruction.swap,
             "true":     Instruction.true_,
             "write":    Instruction.write,
+            "xor":      Instruction.binary_xor,
+            "~":        Instruction.unary_complement,
         }
 
     @property
@@ -472,7 +523,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
     # optimized to "5 5 *" and in the next iteration to 25.
 
     arithmetic = ["+", "-", "*", "/", "%", "add", "sub", "mul", "div", "mod",
-                  ">", "==", "<"]
+            ">", "==", "<", "and", "or", "xor"]
 
     def isstring(c):
         return isinstance(c, str) and c[0]==c[-1]=='"'
@@ -543,6 +594,15 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 if not silent:
                     print("Optimizer: Translated %s %s %s to %s %s" %
                             (a,b,c,b,a))
+                keep_running = True
+                break
+
+            # a b over -> a b a
+            if isconstant(a) and isconstant(b) and c == "over":
+                code[i+2] = a
+                if not silent:
+                    print("Optimizer: Translated %s %s %s to %s %s %s" %
+                            (a,b,c,a,b,a))
                 keep_running = True
                 break
 
