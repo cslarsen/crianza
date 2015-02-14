@@ -17,34 +17,59 @@ import random
 import vm
 
 class GeneticMachine(vm.Machine):
-    """A really simple machine for genetic programming."""
+    """A Machine suited for genetic programming."""
     def __init__(self, code=[]):
         super(GeneticMachine, self).__init__(code)
 
-    def randomize(self, min_code_length=10, max_code_length=10, maxabsint=9999,
-            maxstrlen=10, excluded_ops=[".", "exit", "read", "write", "stack"]):
-        """Creates random instructions."""
+    def randomize(self,
+            length=(10,10),
+            ints=(0,999),
+            strs=(1,10),
+            instruction_ratio=0.5,
+            number_string_ratio=0.8,
+            exclude=[".", "exit", "read", "write", "stack"]):
+
+        """Replaces existing code with completely random instructions. Does not
+        optimize code after generating it.
+
+        Args:
+            length: Tuple of minimum and maximum code lengths. Code length will
+            be a random number between these two, inclusive values.
+
+            ints: Integers in the code will be selected at random from this
+            inclusive range.
+
+            strs: Inclusive range of the length of strings in the code.
+
+            instruction_ratio: Ratio of instructions to numbers/strings,
+            meaning that if this value is 0.5 then there will just as many
+            instructions in the code as there are numbers and strings.
+
+            number_string_ratio: Ratio of numbers to strings.
+
+            exclude: Excluded instructions. For genetic programming, one wants
+            to avoid the program to hang for user input.  The default value is
+            to exclude console i/o and debug instructions.
+
+        Returns:
+            The GeneticMachine.
+        """
         self.code = []
+        instructions = dict([i for i in self.instructions.items() if i[0] not
+            in exclude])
 
-        # Remove some commands we don't wand the machine to include
-        ops = self.instructions
-        for op in excluded_ops:
-            del ops[op]
-
-        length = random.randint(min_code_length, max_code_length)
-
-        for _ in xrange(length):
-            optype = random.randint(0,100)
-            if optype <= 50:
-                self.code.append(random.choice(ops.keys()))
-            elif optype <= 90:
-                #self.code.append(random.randint(-maxabsint, maxabsint))
-                self.code.append(random.randint(0, maxabsint))
+        for _ in xrange(random.randint(*length)):
+            r = random.random()
+            if r <= instruction_ratio:
+                # Generate a random instruction
+                self.code.append(random.choice(instructions.keys()))
+            elif r <= number_string_ratio:
+                # Generate a random number
+                self.code.append(random.randint(*ints))
             else:
-                length = random.randint(1, maxstrlen)
-                string = "".join(chr(random.randint(1,127)) for n in xrange(0,
-                    length))
-                self.code.append('"%s"' % string)
+                # Generate a random string
+                self.code.append('"%s"' % "".join(chr(random.randint(1,127))
+                    for n in xrange(0, random.randint(*strs))))
         return self
 
     def crossover(self, other):
@@ -100,7 +125,7 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
                 return distance, slen + rlen, len(vm.code)
         return default
 
-    machines = [GeneticMachine().randomize(1, max_codelen) for n in xrange(0,num_machines)]
+    machines = [GeneticMachine().randomize(length=(1, max_codelen)) for n in xrange(0,num_machines)]
 
     try:
         for no in xrange(0, generations):
