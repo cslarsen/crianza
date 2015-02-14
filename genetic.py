@@ -73,36 +73,27 @@ class GeneticMachine(vm.Machine):
         return self
 
     def crossover(self, other):
-        minlen = min(len(self.code), len(other.code))
-        point = random.randint(0, minlen)
-        code = self.code[:point] + other.code[point:]
-        return GeneticMachine(code)
+        """Given another GeneticMachine, produces an offspring which is a
+        combination of the two's code.
+        """
+        point = random.randint(0, min(len(self.code), len(other.code)))
+        return GeneticMachine(self.code[:point] + other.code[point:])
 
-    def run_limited(self, steps=100, propagate_errors=False):
-        for n in xrange(0,steps):
-            try:
-                self.step()
-            except StopIteration:
-                break
-            except Exception:
-                if propagate_errors:
-                    raise
-
-                # NOTE: if you want programs that may raise exceptions, but
-                # otherwise produce a valid value on the top of the stack, you
-                # "break" here.
-                #
-                # Otherwise, if you want valid programs, "return None" here.
-                # Returning None gives no score for incorrect programs, but is
-                # much slower to converge.
-                return None
-
-        if len(self.stack) > 0:
-            return self.stack[-1]
-        else:
+    def run(self, steps=100, propagate_errors=False):
+        try:
+            super(GeneticMachine, self).run(steps)
+        except StopIteration:
+            pass
+        except Exception:
+            if propagate_errors:
+                raise
+            # We don't want progarms with errors to live long, so return None
+            # here so that it will get a very low score.
             return None
 
-# TODO:
+        return None if len(self.stack)==0 else self.stack[-1]
+
+
 def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
         keep_top=50, mutation_rate=0.075):
 
@@ -130,7 +121,7 @@ def main(num_machines=1000, generations=100000, steps=20, max_codelen=10,
     try:
         for no in xrange(0, generations):
             # Run all machines and collect results (top of stack)
-            results = [(m.reset().run_limited(steps), i) for (i,m) in enumerate(machines)]
+            results = [(m.reset().run(steps), i) for (i,m) in enumerate(machines)]
 
             # Calculate their fitness score, sort by fitness, code length
             orig = machines
