@@ -574,6 +574,20 @@ def optimize(code, silent=True, ignore_errors=True):
     """Performs optimizations on already parsed code."""
     return constant_fold(code, silent=silent, ignore_errors=ignore_errors)
 
+def isstring(c):
+    return isinstance(c, str) and c[0]==c[-1]=='"'
+
+def isnumber(c):
+    return isinstance(c, int) or isinstance(c, long) or isinstance(c,
+            float)
+
+def isbool(c):
+    return isinstance(c, bool)
+
+def isconstant(c):
+    return isbool(c) or isnumber(c) or isstring(c)
+
+
 def constant_fold(code, silent=True, ignore_errors=True):
     """Constant-folds simple expressions like 2 3 + to 5."""
 
@@ -582,19 +596,6 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
     arithmetic = ["+", "-", "*", "/", "%", "add", "sub", "mul", "div", "mod",
             ">", "==", "<", "and", "or", "xor"]
-
-    def isstring(c):
-        return isinstance(c, str) and c[0]==c[-1]=='"'
-
-    def isnumber(c):
-        return isinstance(c, int) or isinstance(c, long) or isinstance(c,
-                float)
-
-    def isbool(c):
-        return isinstance(c, bool)
-
-    def isconstant(c):
-        return isbool(c) or isnumber(c) or isstring(c)
 
     keep_running = True
     while keep_running:
