@@ -1,7 +1,7 @@
 default: test
 
 repl:
-	python vm.py
+	python vm.py --repl
 
 test:
 	python test.py -v

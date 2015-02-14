@@ -1,11 +1,18 @@
 """
 A simple stack-based virtual machine that you can add your own instructions to.
+
+Copyright (C) 2015 Christian Stigen Larsen
+See the file LICENSE for the license text.
 """
 
 import StringIO
+import optparse
+import string
 import sys
 import tokenize
-import string
+
+
+__version__ = "0.1.0"
 
 
 class MachineError(Exception):
@@ -751,14 +758,36 @@ def repl(optimize_code=True, persist=True):
 
 if __name__ == "__main__":
     try:
-        if len(sys.argv) == 1:
+        opt = optparse.OptionParser("Usage: %prog [option(s)] [file(s])",
+                version="%prog " + __version__)
+
+        opt.add_option("-d", "--dump", dest="dump",
+            help="Dump machine code and exit.",
+            action="store_true", default=False)
+
+        opt.add_option("-v", "--verbose", dest="verbose",
+            help="Enable verbose output.",
+            action="store_true", default=False)
+
+        opt.add_option("-r", "--repl", dest="repl",
+            help="Enter REPL.",
+            action="store_true", default=False)
+
+        opt.disable_interspersed_args()
+        (opts, args) = opt.parse_args()
+
+        if opts.repl:
             repl()
             sys.exit(0)
 
-        for name in sys.argv[1:]:
+        if len(args) == 0:
+            opt.print_help()
+            sys.exit(1)
+
+        for name in args:
             with open(name, "rt") as file:
                 code = parse(file)
-                code = compile(code, silent=True, ignore_errors=False)
+                code = compile(code, silent=not opts.verbose, ignore_errors=False)
                 Machine(code, optimize_code=False).run()
 
     except KeyboardInterrupt:
