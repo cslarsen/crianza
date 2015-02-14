@@ -449,7 +449,49 @@ def parse(stream):
     return code
 
 def compile(code, silent=True, ignore_errors=False, optimize_code=True):
-    """Translates subroutine-forms into a complete working code."""
+    """Compiles subroutine-forms into a complete working code.
+
+    A program such as:
+
+        :sub1 <sub1 code ...> ;
+        :sub2 <sub2 code ...> ;
+        sub1 foo sub2 bar
+
+    is compiled into:
+
+        <sub1 address> call
+        foo
+        <sub2 address> call
+        exit
+        <sub1 code ...> return
+        <sub2 code ...> return
+
+    Optimizations are first done on subroutine bodies, then on the main loop
+    and finally, symbols are resolved (i.e., placeholders for subroutine
+    addresses are replaced with actual addresses).
+
+    Args:
+        silent: If set to False, will print optimization messages.
+
+        ignore_errors: Only applies to the optimization engine, if set to False
+            it will not raise any exceptions. The actual compilatio will still
+            raise errors.
+
+        optimize_code: Flag to control whether to optimize code.
+
+    Raises:
+        CompilationError - Raised if invalid code is detected.
+
+    Returns:
+        An array of code that can be run by a Machine. Typically, you want to
+        pass this to a Machine without doing optimizations.
+
+    Usage:
+        source = parse(StringIO.StringIO("<source code>"))
+        code = compile(source)
+        machine = Machine(code, optimize_code=False)
+        machine.run()
+    """
 
     output = []
     subroutine = {}
@@ -464,7 +506,7 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
                 if name in builtins:
                     raise CompilationError("Cannot shadow internal word definition '%s'." % name)
                 if name in [":", ";"]:
-                    raise CopmilationError("Invalid word name '%s'." % name)
+                    raise CompilationError("Invalid word name '%s'." % name)
                 subroutine[name] = []
                 while True:
                     op = it.next()
@@ -488,7 +530,7 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
                 xcode.append("call")
         subroutine[name] = xcode
 
-    # Add main code (code outside of subroutines)
+    # Compile main code (code outside of subroutines)
     xcode = []
     for op in output:
         xcode.append(op)
