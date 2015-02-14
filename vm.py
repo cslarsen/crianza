@@ -2,9 +2,10 @@
 A simple stack-based virtual machine that you can add your own instructions to.
 """
 
-from StringIO import StringIO
-from tokenize import *
+import StringIO
 import sys
+import tokenize
+import string
 
 
 class MachineError(Exception):
@@ -416,7 +417,7 @@ class Machine(object):
 def parse(stream):
     """Parse a Forth-like language and return code."""
     code = []
-    tokens = generate_tokens(stream.readline)
+    tokens = tokenize.generate_tokens(stream.readline)
 
     def strip_whitespace(s):
         r = ""
@@ -429,22 +430,22 @@ def parse(stream):
 
     while True:
         for token, value, _, _, _ in tokens:
-            if token == NUMBER:
+            if token == tokenize.NUMBER:
                 try:
                     code.append(int(value))
                 except ValueError, e:
                     raise ParserError(e)
-            elif token in [OP, STRING, NAME]:
+            elif token in [tokenize.OP, tokenize.STRING, tokenize.NAME]:
                 code.append(value)
-            elif token in [NEWLINE, NL]:
+            elif token in [tokenize.NEWLINE, tokenize.NL]:
                 break
-            elif token in [COMMENT, INDENT, DEDENT]:
+            elif token in [tokenize.COMMENT, tokenize.INDENT, tokenize.DEDENT]:
                 pass
-            elif token == ENDMARKER:
+            elif token == tokenize.ENDMARKER:
                 return code
             else:
                 raise ParserError("Unknown token %s: '%s'" %
-                        (tok_name[token], strip_whitespace(value)))
+                        (tokenize.tok_name[token], strip_whitespace(value)))
     return code
 
 def compile(code, silent=True, ignore_errors=False, optimize_code=True):
@@ -672,14 +673,14 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
             if isconstant(a) and b == "cast_str":
                 if isstring(a):
-                    string = a[1:-1]
+                    asstring = a[1:-1]
                 else:
-                    string = str(a)
-                string = '"%s"' % string
+                    asstring = str(a)
+                asstring = '"%s"' % asstring
                 del code[i:i+2]
-                code.insert(i, string)
+                code.insert(i, asstring)
                 if not silent:
-                    print("Optimizer: Translated %s %s to %s" % (a, b, string))
+                    print("Optimizer: Translated %s %s to %s" % (a, b, asstring))
                 keep_running = True
                 break
 
@@ -728,7 +729,7 @@ def repl(optimize_code=True, persist=True):
                 machine = Machine([])
                 continue
 
-            code = compile(parse(StringIO(source)), silent=False,
+            code = compile(parse(StringIO.StringIO(source)), silent=False,
                     optimize_code=optimize_code)
 
             if not persist:
