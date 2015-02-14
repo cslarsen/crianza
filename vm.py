@@ -127,6 +127,10 @@ class Instruction(object):
         vm.push(b % a)
 
     @staticmethod
+    def nop(vm):
+        pass
+
+    @staticmethod
     def exit(vm):
         raise StopIteration
 
@@ -318,8 +322,9 @@ class Machine(object):
             "jmp":      Instruction.jmp,
             "mod":      Instruction.mod,
             "mul":      Instruction.mul,
+            "nop":      Instruction.nop,
             "not":      Instruction.unary_not,
-            "or":      Instruction.binary_or,
+            "or":       Instruction.binary_or,
             "over":     Instruction.over,
             "read":     Instruction.read,
             "return":   Instruction.return_,
