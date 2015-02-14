@@ -638,11 +638,27 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 keep_running = True
                 break
 
-            # Remove dead code such as <constant> drop
+            # Dead code removal: <constant> drop
             if isconstant(a) and b == "drop":
                 del code[i:i+2]
                 if not silent:
                     print("Optimizer: Removed dead code %s %s" % (a,b))
+                keep_running = True
+                break
+
+            # Dead code removal: <integer> cast_int
+            if isinstance(a, int) and b == "cast_int":
+                del code[i+1]
+                if not silent:
+                    print("Optimizer: Translated %s %s to %s" % (a,b,a))
+                keep_running = True
+                break
+
+            # Dead code removal: <string> cast_str
+            if isinstance(a, str) and b == "cast_str":
+                del code[i+1]
+                if not silent:
+                    print("Optimizer: Translated %s %s to %s" % (a,b,a))
                 keep_running = True
                 break
 
