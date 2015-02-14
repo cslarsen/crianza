@@ -135,9 +135,11 @@ class Instruction(object):
 
     @staticmethod
     def write(vm, flush=True):
-        vm.output.write(str(vm.pop()))
-        if flush:
-            vm.output.flush()
+        value = str(vm.pop())
+        if vm.output is not None:
+            vm.output.write(value)
+            if flush:
+                vm.output.flush()
 
     @staticmethod
     def at(vm):
@@ -146,9 +148,10 @@ class Instruction(object):
     @staticmethod
     def dot(vm, flush=True):
         Instruction.write(vm, flush=False)
-        vm.output.write("\n")
-        if flush:
-            vm.output.flush()
+        if vm.output is not None:
+            vm.output.write("\n")
+            if flush:
+                vm.output.flush()
 
     @staticmethod
     def read(vm):
