@@ -145,6 +145,7 @@ class Instruction(object):
 
     @staticmethod
     def at(vm):
+        """Pushes previous position to return stack."""
         vm.return_stack.push(vm.instruction_pointer - 1)
 
     @staticmethod
@@ -442,14 +443,14 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
 
     # Optimize main code
     if optimize_code:
-        output = optimize(output, ignore_errors=False)
+        output = optimize(output, silent=silent, ignore_errors=False)
 
     # Add subroutines to output, track their locations
     location = {}
     for name, code in subroutine.items():
         location[name] = len(output)
         if optimize_code:
-            output += optimize(code, ignore_errors=False)
+            output += optimize(code, silent=silent, ignore_errors=False)
         else:
             output += code
 
@@ -470,7 +471,8 @@ def constant_fold(code, silent=True, ignore_errors=True):
     # Loop until we haven't done any optimizations.  E.g., "2 3 + 5 *" will be
     # optimized to "5 5 *" and in the next iteration to 25.
 
-    arithmetic = ["+", "-", "*", "/", "%", "add", "sub", "mul", "div", "mod"]
+    arithmetic = ["+", "-", "*", "/", "%", "add", "sub", "mul", "div", "mod",
+                  ">", "==", "<"]
 
     def isstring(c):
         return isinstance(c, str) and c[0]==c[-1]=='"'
@@ -544,6 +546,29 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 keep_running = True
                 break
 
+            # "123" cast_int -> 123
+            if isstring(a) and b == "cast_int":
+                try:
+                    number = int(a[1:-1])
+                    del code[i:i+2]
+                    code.insert(i, number)
+                    if not silent:
+                        print("Optimizer: Translated %s %s to %s" % (a, b,
+                            number))
+                    keep_running = True
+                    break
+                except ValueError:
+                    pass
+
+            if isnumber(a) and b == "cast_str":
+                string = '"%s"' % str(a)
+                del code[i:i+2]
+                code.insert(i, string)
+                if not silent:
+                    print("Optimizer: Translated %s %s to %s" % (a, b, string))
+                keep_running = True
+                break
+
     return code
 
 def print_code(vm, ops_per_line=8):
@@ -589,10 +614,8 @@ def repl(optimize_code=True, persist=True):
                 machine = Machine([])
                 continue
 
-            code = compile(parse(StringIO(source)))
-
-            if optimize_code:
-                code = optimize(code, silent=False)
+            code = compile(parse(StringIO(source)), silent=False,
+                    optimize_code=optimize_code)
 
             if not persist:
                 machine.reset()
