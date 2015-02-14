@@ -39,7 +39,7 @@ class Stack(object):
 
     @property
     def top(self):
-        return self._values[-1]
+        return None if len(self._values) == 0 else self._values[-1]
 
     def __str__(self):
         return str(self._values)
