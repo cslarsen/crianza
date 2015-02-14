@@ -379,10 +379,19 @@ class Machine(object):
         self.instruction_pointer += 1
         self.dispatch(instruction)
 
-    def run(self):
+    def run(self, steps=None):
+        """Run machine, dispatching instructions.
+
+        If steps is specified, it will run that many instructions.
+        """
         try:
             while self.instruction_pointer < len(self.code):
                 self.step()
+
+                if steps is not None:
+                    steps -= 1
+                    if steps == 0:
+                        break
         except StopIteration:
             pass
         except EOFError:
