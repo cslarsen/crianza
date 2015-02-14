@@ -415,10 +415,10 @@ class Machine(object):
         if op in self.instructions:
             instruction = self.instructions[op]
             instruction(self)
-        elif isinstance(op, int):
+        elif isnumber(op):
             # Push numbers on data stack
             self.push(op)
-        elif isinstance(op, str) and op[0]==op[-1]=='"':
+        elif isstring(op):
             # Push quoted string on data stack
             self.push(op[1:-1])
         else:
