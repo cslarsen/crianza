@@ -254,21 +254,6 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
 
     return survivors
 
-def create_genetic_class(name, score_function):
-    class __Foo(GeneticMachine):
-        def __init__(self, code=[]):
-            super(GeneticMachine, self).__init__(self, code)
-
-        def new(self, *args, **kw):
-            return __Foo(*args, **kw)
-
-        def __str__(self):
-            return "<%s %s>" % (name, repr(self))
-
-    __Foo.score = score_function
-    __Foo.__name__ == name
-    return __Foo
-
 if __name__ == "__main__":
     class Calc123(GeneticMachine):
         def __init__(self, code=[]):
@@ -288,6 +273,9 @@ if __name__ == "__main__":
             weights = (0.10, 0.80, 0.02, 0.02, 0.06)
 
             return 1.0 - weighted_tanimoto(actual, wanted, weights)
+
+        def __str__(self):
+            return "<Calc123 %s>" % super(Calc123, self).__str__()
 
     def stop123(its, generation):
         best = sorted(generation, key=lambda m: m.score())#[:10]
