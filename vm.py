@@ -560,8 +560,12 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 except ValueError:
                     pass
 
-            if isnumber(a) and b == "cast_str":
-                string = '"%s"' % str(a)
+            if isconstant(a) and b == "cast_str":
+                if isstring(a):
+                    string = a[1:-1]
+                else:
+                    string = str(a)
+                string = '"%s"' % string
                 del code[i:i+2]
                 code.insert(i, string)
                 if not silent:
