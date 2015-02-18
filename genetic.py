@@ -111,10 +111,9 @@ def randomize(vm,
 def crossover(m, f):
     """Produces an offspring from two Machines, whose code is a
     combination of the two."""
-    start = random.randint(0, len(m.code)-1)
-    code = m.code[0:start]
-    code += f.code[random.randint(0, len(f.code)-1):]
-    return code
+    i = random.randint(0, len(m.code))
+    j = random.randint(0, len(f.code))
+    return m.code[:i] + f.code[j:]
 
 
 class GeneticMachine(vm.Machine):
