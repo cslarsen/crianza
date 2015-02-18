@@ -30,7 +30,12 @@ class TestVM(unittest.TestCase):
         self.assertEqual(self._run([]).stack, [])
 
     def _test_arithmetic(self, a, b, op):
-        self.assertEqual(self._run([a, b, op.__name__]).stack, [op(a,b)])
+        translate = {"mul": "*",
+                     "sub": "-",
+                     "add": "+",
+                     "mod": "%",
+                     "div": "/"}
+        self.assertEqual(self._run([a, b, translate[op.__name__]]).stack, [op(a,b)])
 
     def test_stack(self):
         self.assertEqual(self._run([1,2,3,4,5,"*","*","*","*"]).stack, [120])
@@ -45,7 +50,7 @@ class TestVM(unittest.TestCase):
                     self._test_arithmetic(a, b, op)
 
     def test_optimizer_errors(self):
-        for op in ["/", "mod", "div", "%"]:
+        for op in ["/", "%"]:
             with self.assertRaises(vm.CompilationError):
                 vm.constant_fold([2, 0, op], ignore_errors=False)
 

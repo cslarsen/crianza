@@ -1,5 +1,5 @@
-"Enter a number: " write read cast_int
-"Enter another number: " write read cast_int
+"Enter a number: " write read int
+"Enter another number: " write read int
 
 over over
 

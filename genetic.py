@@ -62,7 +62,7 @@ def randomize(vm,
         strs=(1,10),
         instruction_ratio=0.5,
         number_string_ratio=0.8,
-        exclude=[".", "exit", "read", "write", "stack"]):
+        exclude=[".", "exit", "read", "write", "str"]):
 
     """Replaces existing code with completely random instructions. Does not
     optimize code after generating it.

@@ -1,4 +1,4 @@
-"Enter a number: " write read cast_int
+"Enter a number: " write read int
 "The number " write dup write " is " write
-2 % 0 == "even." "odd." if .
+2 % 0 = "even." "odd." if .
 0 jmp

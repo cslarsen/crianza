@@ -17,6 +17,12 @@ class DoubleInput(GeneticMachine):
     def new(self, *args, **kw):
         return DoubleInput(*args, **kw)
 
+    #def randomize(self, **kw):
+    #    exclude = kw.get("exclude", [])
+    #    exclude += ["|", "!", "&", "^", "~", "not", "or", "and", "true", "false"]
+    #    kw["exclude"] = exclude
+    #    return super(DoubleInput, self).randomize(**kw)
+
     def setUp(self):
         self._orig = self._code
         self._input = random.randint(0,100)
@@ -53,11 +59,16 @@ class DoubleInput(GeneticMachine):
 
 
 if __name__ == "__main__":
+    print("Starting ...")
     survivors = iterate(DoubleInput, DoubleInput.stop)
 
     print("Listing programs from best to worst, unique solutions only.")
     seen = set()
+    maxcount = 15
     for n, m in enumerate(survivors):
         if m.code_string not in seen:
             print("%d %s: %s" % (n, m, m.code_string))
             seen.update([m.code_string])
+            maxcount -= 1
+            if maxcount < 0:
+                break

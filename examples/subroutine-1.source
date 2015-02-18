@@ -1,3 +1,10 @@
+# Expected output:
+# one
+# two
+# three
+# 144
+# finished
+
 # ---- program start ----
 10 call
 0 exit
@@ -24,6 +31,5 @@ dup * return
 4 call # print
 
 "finished" .
-stack
 
 return
