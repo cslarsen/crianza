@@ -278,7 +278,7 @@ if __name__ == "__main__":
             return "<Calc123 %s>" % super(Calc123, self).__str__()
 
     def stop123(its, generation):
-        best = sorted(generation, key=lambda m: m.score())#[:10]
+        best = sorted(generation, key=lambda m: m.score())
         return average(best, lambda s: s.score()) == 0.0 and \
                0 <= average(best, lambda s: len(s.code)) < 1.25
 
