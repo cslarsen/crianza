@@ -1,16 +1,9 @@
 """
 Simple genetic programming using the virtual machine.
 
-Tip: Run with pypy for speed.
+TIP: Run with pypy for speed.
 
-TODO:
-
-- Programs that crash should be much less likely to survive.
-- Crossover should allow this:
-        parent1:    .........
-        parent2:    ---------
-        result:     ..----...
-        instead of: ....-----
+See examples in examples-genetic/
 """
 
 import math
@@ -118,8 +111,10 @@ def randomize(vm,
 def crossover(m, f):
     """Produces an offspring from two Machines, whose code is a
     combination of the two."""
-    point = random.randint(0, min(len(m.code), len(f.code)))
-    return m.code[:point] + f.code[point:]
+    start = random.randint(0, len(m.code)-1)
+    code = m.code[0:start]
+    code += f.code[random.randint(0, len(f.code)-1):]
+    return code
 
 
 class GeneticMachine(vm.Machine):
@@ -128,22 +123,31 @@ class GeneticMachine(vm.Machine):
         self._error = False
 
     def setUp(self):
+        """Called before each invocation of run()."""
         self.reset()
         return self
 
-    def new(self, *args, **kw):
-        return GeneticMachine(*args, **kw)
-
     def tearDown(self):
+        """Called after each invocation of run()."""
         return self
 
+    def new(self, *args, **kw):
+        """A virtual constructor.
+
+        Subclasses should override this method to construct correct instances.
+        """
+        return GeneticMachine(*args, **kw)
+
     def randomize(self, **kw):
+        """Creates a new random code."""
         return randomize(self, **kw)
 
     def crossover(self, other):
+        """Produce offspring from this and another instance."""
         return self.new(crossover(self, other))
 
     def mutate(self):
+        """Mutates code."""
         # Choose a random position
         if len(self.code) == 0:
             return
@@ -162,6 +166,7 @@ class GeneticMachine(vm.Machine):
             self.code.insert(index, self.new().randomize().code[0])
 
     def run(self, steps=10):
+        """Executes up to `steps` instructions."""
         try:
             super(GeneticMachine, self).run(steps)
             self._error = False
@@ -171,7 +176,17 @@ class GeneticMachine(vm.Machine):
             self._error = True
 
     def score(self):
+        """Returns a machine's fitness as a number from 0.0 (perfect score) to
+        1.0 (worst score).
+
+        This method must be overriden to produce selection pressure, i.e. to
+        direct what kind of problem this machine should solve.
+        """
         return 1.0 if self._error else 0.0
+
+    def stop(iterations, generation):
+        """Conditions for when to stop the simulation."""
+        return iterations >= 10000
 
 
 def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
@@ -233,6 +248,9 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
             # Select the best
             survivors = generation[:int(survival_rate * len(generation))]
 
+            # Remove dead ones
+            survivors = [s for s in survivors if len(s.code)>0]
+
             # Create a new generation based on the survivors.
             generation = []
             while len(generation) < machines:
@@ -253,37 +271,3 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
         pass
 
     return survivors
-
-if __name__ == "__main__":
-    class Calc123(GeneticMachine):
-        def __init__(self, code=[]):
-            super(Calc123, self).__init__(code)
-
-        def new(self, *args, **kw):
-            return Calc123(*args, **kw)
-
-        def score(self):
-            top = self.top if vm.isnumber(self.top) else 9999.9
-            actual = (top,
-                      1000 if self._error else 0,
-                      len(self.stack),
-                      len(self.return_stack),
-                      len(self.code))
-            wanted = (123, 0, 1, 0, 1)
-            weights = (0.10, 0.80, 0.02, 0.02, 0.06)
-
-            return 1.0 - weighted_tanimoto(actual, wanted, weights)
-
-        def __str__(self):
-            return "<Calc123 %s>" % super(Calc123, self).__str__()
-
-    def stop123(its, generation):
-        best = sorted(generation, key=lambda m: m.score())
-        return average(best, lambda s: s.score()) == 0.0 and \
-               0 <= average(best, lambda s: len(s.code)) < 1.25
-
-    survivors = iterate(Calc123, stop_function=stop123)
-
-    print("Best programs:")
-    for m in survivors[:min(15, len(survivors))]:
-        print("%s: %s" % (m, m.code_string))
