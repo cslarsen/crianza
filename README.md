@@ -5,7 +5,13 @@ This project is the code for the blog post at https://csl.name/post/vm/.
 
 It contains a simple Forth-like VM written in Python. It also contains a
 very simple peephole-optimizer that does constant folding (and ignoring the
-fact that jumps are then off).
+fact that jumps are then off) and other optimizations.  It also does some
+simple code checking.
+
+Finally, I've made a genetic programming engine using the VM.  It uses a
+weighted Taniomto coefficient to relate fitness scores, and seems to work
+pretty well, though I've only tested it for trivial goals (such as finding a
+short subroutine that can double input numbers).
 
 It's an educational project.
 
@@ -18,11 +24,11 @@ Here's code to print the Fibonacci sequence:
     : next swap over + ;
 
     # Start values
-    0 println
-    1 println
+    0 .
+    1 .
 
     # Loop forever
-    @ next println return
+    @ next . return
 
 You can run it by typing:
 
