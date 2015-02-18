@@ -6,7 +6,6 @@ TIP: Run with pypy for speed.
 See examples in examples-genetic/
 """
 
-import math
 import random
 import vm
 
