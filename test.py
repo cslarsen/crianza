@@ -51,8 +51,8 @@ class TestVM(unittest.TestCase):
 
     def test_optimizer_errors(self):
         for op in ["/", "%"]:
-            with self.assertRaises(vm.CompilationError):
-                vm.constant_fold([2, 0, op], ignore_errors=False)
+            func = lambda: vm.constant_fold([2, 0, op], ignore_errors=False)
+            self.assertRaises(vm.CompilationError, func)
 
     def test_optimizer(self):
         self.assertEqual(vm.constant_fold([2,3,"*","."]), [6,"."])
