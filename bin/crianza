@@ -33,9 +33,9 @@ def parse_and_run(file, opts):
             crianza.parse(file),
             silent=not opts.verbose,
             ignore_errors=False,
-            optimize_code=opts.optimize)
+            optimize=opts.optimize)
 
-    machine = crianza.Machine(code, optimize_code=False)
+    machine = crianza.Machine(code, optimize=False)
 
     if not opts.dump:
         machine.run()

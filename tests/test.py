@@ -71,7 +71,7 @@ class TestVM(unittest.TestCase):
             13, 'call', 'return', 'exit', 'dup', '.', 'return', 'swap', 'over',
             '+', 'return'])
 
-        machine = vm.Machine(code, output=None, optimize_code=False)
+        machine = vm.Machine(code, output=None, optimize=False)
 
         # skip to main loop
         machine.run(11)

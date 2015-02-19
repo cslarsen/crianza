@@ -430,16 +430,16 @@ Instruction.default_instructions = {
 class Machine(object):
     """A virtual machine with code, a data stack and an instruction stack."""
 
-    def __init__(self, code, output=sys.stdout, optimize_code=True):
+    def __init__(self, code, output=sys.stdout, optimize=True):
         """
         Args:
             code: The code to run.
             output: Output stream that the machine's code can write to.
-            optimize_code: If True, optimize the given code.
+            optimize: If True, optimize the given code.
         """
         self.reset()
-        self._code = code if optimize_code == False else optimize(code)
-        self._optimize = optimize_code
+        self._code = code if optimize == False else optimized(code)
+        self._optimize = optimize
         self.output = output
         self.instructions = Instruction.default_instructions
 
@@ -454,7 +454,7 @@ class Machine(object):
 
     @code.setter
     def code(self, value):
-        self._code = value if not self._optimize else optimize(value)
+        self._code = value if not self._optimize else optimized(value)
 
     @property
     def stack(self):
@@ -469,8 +469,8 @@ class Machine(object):
         return self
 
     def __repr__(self):
-        return "<Machine: IP=%d |DS|=%d |RS|=%d>" % (self.instruction_pointer,
-                len(self.data_stack), len(self.return_stack))
+        return "<Machine: ip=%d |ds|=%d |ds|=%d top=%s>" % (self.instruction_pointer,
+                len(self.data_stack), len(self.return_stack), str(self.top))
 
     def __str__(self):
         return self.__repr__()
@@ -634,7 +634,7 @@ def check(code):
 
     return code
 
-def compile(code, silent=True, ignore_errors=False, optimize_code=True):
+def compile(code, silent=True, ignore_errors=False, optimize=True):
     """Compiles subroutine-forms into a complete working code.
 
     A program such as:
@@ -663,7 +663,7 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
             it will not raise any exceptions. The actual compilatio will still
             raise errors.
 
-        optimize_code: Flag to control whether to optimize code.
+        optimize: Flag to control whether to optimize code.
 
     Raises:
         CompilationError - Raised if invalid code is detected.
@@ -675,7 +675,7 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
     Usage:
         source = parse("<source code>")
         code = compile(source)
-        machine = Machine(code, optimize_code=False)
+        machine = Machine(code, optimize=False)
         machine.run()
     """
 
@@ -730,15 +730,15 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
         output += [lookup(Instruction.exit)]
 
     # Optimize main code
-    if optimize_code:
-        output = optimize(output, silent=silent, ignore_errors=False)
+    if optimize:
+        output = optimized(output, silent=silent, ignore_errors=False)
 
     # Add subroutines to output, track their locations
     location = {}
     for name, code in subroutine.items():
         location[name] = len(output)
-        if optimize_code:
-            output += optimize(code, silent=silent, ignore_errors=False)
+        if optimize:
+            output += optimized(code, silent=silent, ignore_errors=False)
         else:
             output += code
 
@@ -749,7 +749,7 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
 
     return check(output)
 
-def optimize(code, silent=True, ignore_errors=True):
+def optimized(code, silent=True, ignore_errors=True):
     """Performs optimizations on already parsed code."""
     return constant_fold(code, silent=silent, ignore_errors=ignore_errors)
 
@@ -829,7 +829,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                                 ZeroDivisionError("Division by zero"))
 
                 # Calculate result by running on a machine
-                result = Machine([a,b,c], optimize_code=False).run().top
+                result = Machine([a,b,c], optimize=False).run().top
                 del code[i:i+3]
                 code.insert(i, result)
 
@@ -939,11 +939,18 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
     return code
 
-def repl(optimize_code=True, persist=True):
+def eval(source, optimize=True, output=sys.stdout, steps=-1):
+    """Compiles and runs program, returning the machine."""
+    code = compile(parse(source), optimize=optimize)
+    machine = Machine(code, optimize=False, output=output)
+    machine.run(steps)
+    return machine
+
+def repl(optimize=True, persist=True):
     """Starts a simple REPL for this machine.
 
     Args:
-        optimize_code: Controls whether to run inputted code through the
+        optimize: Controls whether to run inputted code through the
         optimizer.
 
         persist: If True, the machine is not deleted after each line.
@@ -991,8 +998,7 @@ def repl(optimize_code=True, persist=True):
                 machine = Machine([])
                 continue
 
-            code = compile(parse(source), silent=False,
-                    optimize_code=optimize_code)
+            code = compile(parse(source), silent=False, optimize=optimize)
 
             if not persist:
                 machine.reset()
@@ -1048,8 +1054,8 @@ if __name__ == "__main__":
                 try:
                     code = parse(file)
                     code = compile(code, silent=not opts.verbose,
-                            ignore_errors=False, optimize_code=opts.optimize)
-                    machine = Machine(code, optimize_code=False)
+                            ignore_errors=False, optimize=opts.optimize)
+                    machine = Machine(code, optimize=False)
                     if not opts.dump:
                         machine.run()
                     else:

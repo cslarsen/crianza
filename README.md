@@ -22,6 +22,37 @@ The project's main goal is to be tutorial and fun.
 Example: Running a simple program from Python
 ---------------------------------------------
 
+The simplest way to get started with the language itself is to use the `eval`
+function:
+
+    >>> import crianza
+    >>> crianza.eval("2 3 + 4 *")
+    <Machine: ip=1 |ds|=1 |ds|=0 top=20>
+
+This is equivalent of computing `(2 + 3) * 4` and puts the result on top of the
+data stack.  We can get this by doing `crianza.eval(...).top`.  The language is
+basically [dialect of
+Forth](https://en.wikipedia.org/wiki/Forth_(programming_language)).
+
+The above code is automatically optimized.  In fact, it's constant-folded down
+to the result `20`:
+
+    >>> m = crianza.eval("2 3 + 4 *")
+    >>> m.code
+    [20]
+
+You can also divert program output to a memory buffer:
+
+    >>> from StringIO import StringIO
+    >>> buffer = StringIO()
+    >>> machine = crianza.eval('"Hello, world!" .', output=buffer)
+    >>> buffer.getvalue()
+    'Hello, world!\n'
+    >>> machine.code_string
+    '"Hello, world!" .'
+
+The more elaborate way of doing this is:
+
     from crianza import *
 
     source = "2 3 + 4 *" # or: (2+3) * 4
@@ -32,12 +63,9 @@ Example: Running a simple program from Python
 
     assert(machine.top == 20)
 
-The source code is very much like
-[Forth](https://en.wikipedia.org/wiki/Forth_(programming_language)).
-
 You can also do some simple optimizations on the code by specifying:
 
-    code = check(optimize(parse(sourc)))
+    code = compile(source, optimize=True)
 
 In this case, the entire code will be constant-folded to simply 20. The `check`
 function checks for simple errors.
