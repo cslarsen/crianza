@@ -1,20 +1,22 @@
-Simple Python VM
-----------------
+Crianza
+-------
 
-This project is the code for the blog post at https://csl.name/post/vm/.
+Crianza is a very simple program virtual machine with example genetic
+programming applications.
 
-It contains a simple Forth-like VM written in Python. It also contains a
-very simple peephole-optimizer that does constant folding (and ignoring the
-fact that jumps are then off) and other optimizations.  It also does some
-simple code checking.
+It contains the code from the blog post at https://csl.name/post/vm/
 
-Finally, I've made a genetic programming engine using the VM.  It uses a
-weighted Tanimoto coefficient to relate fitness scores (although you can use
-any metric you want, and seems to work pretty well, though I've only tested it
-for trivial goals (such as finding a short subroutine that can double input
-numbers).
+The VM contains:
 
-It's an educational project.
+  * An interpreter for a Forth-like stack-based language
+  * Some simple peephole optimizations
+  * Simple correctness checking
+  * Compilation from source language down to machine language
+
+The genetic programming part uses a simple evolutionary approach with crossover
+and weighted Tanimoto coefficients to relate fitness scores.
+
+The project's main goal is to be tutorial and fun.
 
 Example
 -------
