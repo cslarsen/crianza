@@ -9,9 +9,10 @@ fact that jumps are then off) and other optimizations.  It also does some
 simple code checking.
 
 Finally, I've made a genetic programming engine using the VM.  It uses a
-weighted Taniomto coefficient to relate fitness scores, and seems to work
-pretty well, though I've only tested it for trivial goals (such as finding a
-short subroutine that can double input numbers).
+weighted Tanimoto coefficient to relate fitness scores (although you can use
+any metric you want, and seems to work pretty well, though I've only tested it
+for trivial goals (such as finding a short subroutine that can double input
+numbers).
 
 It's an educational project.
 
@@ -24,11 +25,11 @@ Here's code to print the Fibonacci sequence:
     : next swap over + ;
 
     # Start values
-    0 .
-    1 .
+    0 println
+    1 println
 
     # Loop forever
-    @ next . return
+    @ next println return
 
 You can run it by typing:
 

@@ -450,9 +450,8 @@ class Machine(object):
         return self
 
     def __repr__(self):
-        return "<Machine: IP=%d |DS|=%d |RS|=%d |code|=%d>" % (
-            self.instruction_pointer, len(self.data_stack),
-            len(self.return_stack), len(self.code))
+        return "<Machine: IP=%d |DS|=%d |RS|=%d>" % (self.instruction_pointer,
+                len(self.data_stack), len(self.return_stack))
 
     def __str__(self):
         return self.__repr__()
@@ -463,7 +462,7 @@ class Machine(object):
         s = []
         for op in self.code:
             if isstring(op):
-                s.append(op)
+                s.append(repr(op)[1:-1])
             else:
                 s.append(str(op))
         return " ".join(s)
@@ -902,7 +901,10 @@ def print_code(vm, ops_per_line=8):
             if addr > 0:
                 sys.stdout.write("\n")
             sys.stdout.write("%0*d  " % (max(4, len(str(len(vm.code)))), addr))
-        sys.stdout.write("%s " % str(op))
+        value = str(op)
+        if isstring(op):
+            value = repr(op)[1:-1]
+        sys.stdout.write("%s " % value)
     sys.stdout.write("\n")
 
 
