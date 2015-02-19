@@ -469,7 +469,7 @@ class Machine(object):
         return self
 
     def __repr__(self):
-        return "<Machine: ip=%d |ds|=%d |ds|=%d top=%s>" % (self.instruction_pointer,
+        return "<Machine: ip=%d |ds|=%d |rs|=%d top=%s>" % (self.instruction_pointer,
                 len(self.data_stack), len(self.return_stack), str(self.top))
 
     def __str__(self):
