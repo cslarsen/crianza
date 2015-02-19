@@ -10,7 +10,7 @@ setup(
     packages=["crianza"],
     scripts=["bin/crianza"]
     url="https://github.com/cslarsen/crianza",
-    license="LICENSE.txt",
+    license="LICENSE",
     description="Simple VM and genetic programming framework.",
     long_description=open("README.md").read(),
     zip_safe=True,
