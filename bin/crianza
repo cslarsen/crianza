@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
+import crianza
+import optparse
+import sys
+
+def options():
+    opt = optparse.OptionParser("Usage: %prog [option(s)] [file(s])",
+            version="%prog " + crianza.__version__)
+
+    opt.add_option("-d", "--dump", dest="dump",
+        help="Dump machine code and exit.",
+        action="store_true", default=False)
+
+    opt.add_option("-v", "--verbose", dest="verbose",
+        help="Enable verbose output.",
+        action="store_true", default=False)
+
+    opt.add_option("-x", dest="optimize",
+        help="Do not optimize program.",
+        action="store_false", default=True)
+
+    opt.add_option("-r", "--repl", dest="repl",
+        help="Enter REPL.",
+        action="store_true", default=False)
+
+    opt.disable_interspersed_args()
+    return opt
+
+def parse_and_run(file, opts):
+    code = crianza.compile(
+            crianza.parse(file),
+            silent=not opts.verbose,
+            ignore_errors=False,
+            optimize_code=opts.optimize)
+
+    machine = crianza.Machine(code, optimize_code=False)
+
+    if not opts.dump:
+        machine.run()
+    else:
+        print(machine.code_string)
+
+def main():
+    opt = options()
+    (opts, args) = opt.parse_args()
+
+    if opts.repl:
+        crianza.repl()
+        sys.exit(0)
+
+    if len(args) == 0:
+        opt.print_help()
+        sys.exit(1)
+
+    for name in args:
+        with open(name, "rt") as file:
+            try:
+                parse_and_run(file, opts)
+            except crianza.MachineError, e:
+                print("Runtime error: %s" % e)
+                sys.exit(1)
+            except crianza.CompilationError, e:
+                print("Compilation error: %s" % e)
+                sys.exit(1)
+            except crianza.ParserError, e:
+                print("Parser error: %s" % e)
+                sys.exit(1)
+
+if __name__ == "__main__":
+    try:
+        main()
+        sys.exit(0)
+    except KeyboardInterrupt:
+        pass

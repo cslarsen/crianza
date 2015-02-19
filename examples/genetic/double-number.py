@@ -3,7 +3,7 @@ A genetic programming simulation that produces programs that double their input
 values.
 """
 
-from genetic import *
+from crianza.genetic import *
 
 class DoubleInput(GeneticMachine):
     """A GP machine that produces programs that double their input values.
@@ -41,7 +41,7 @@ class DoubleInput(GeneticMachine):
                   len(self.return_stack),
                   len(self.code))
 
-        wanted = (self._input**2, # We want to find a way to calculate n^2
+        wanted = (self._input*2, # We want to find a way to calculate n*2
                   0, # We don't want errors
                   1, # We the stack to only consist of the answer
                   0, # We want the return stack to be zero
@@ -55,13 +55,9 @@ class DoubleInput(GeneticMachine):
         best = sorted(generation, key=lambda m: m.score())
         return average(best, lambda s: s.score()) == 0.0
 
-    def __str__(self):
-        return "<DoubleInput %s>" % super(DoubleInput, self).__str__()
-
 
 if __name__ == "__main__":
     print("Starting ...")
-
     survivors = iterate(DoubleInput, DoubleInput.stop, machines=100)
 
     print("Listing programs from best to worst, unique solutions only.")

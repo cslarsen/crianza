@@ -3,7 +3,11 @@ A genetic programming simulation that produces programs that double their input
 values.
 """
 
-from genetic import *
+from crianza.genetic import *
+import StringIO
+import crianza
+import sys
+
 
 class DoubleInput(GeneticMachine):
     """A GP machine that produces programs that double their input values.
@@ -41,7 +45,7 @@ class DoubleInput(GeneticMachine):
                   len(self.return_stack),
                   len(self.code))
 
-        wanted = (self._input*2, # We want to find a way to calculate n*2
+        wanted = (self._input**2, # We want to find a way to calculate n^2
                   0, # We don't want errors
                   1, # We the stack to only consist of the answer
                   0, # We want the return stack to be zero
@@ -55,15 +59,21 @@ class DoubleInput(GeneticMachine):
         best = sorted(generation, key=lambda m: m.score())
         return average(best, lambda s: s.score()) == 0.0
 
-    def __str__(self):
-        return "<DoubleInput %s>" % super(DoubleInput, self).__str__()
 
+def splitlines(code, width):
+    v = code.split(" ")
+    while len(v) > 0:
+        line = []
+        while len(" ".join(line))<=width and len(v)>0:
+            line.append(v.pop(0))
+        yield " ".join(line)
 
 if __name__ == "__main__":
     print("Starting ...")
+
     survivors = iterate(DoubleInput, DoubleInput.stop, machines=100)
 
-    print("Listing programs from best to worst, unique solutions only.")
+    print("\nListing programs from best to worst, unique solutions only.")
     seen = set()
     maxcount = 15
     for n, m in enumerate(survivors):
@@ -73,3 +83,34 @@ if __name__ == "__main__":
             maxcount -= 1
             if maxcount < 0:
                 break
+
+    if len(survivors) == 0:
+        sys.exit(0)
+
+    print("\nThe GP found that you can make a square word like so:\n")
+
+    best = survivors[0]
+    sys.stdout.write("    : square\n")
+    for line in splitlines(best.code_string, width=40):
+        sys.stdout.write("        %s" % line)
+    sys.stdout.write(" ;\n\n")
+
+    print("Example output:\n")
+    correct = 0
+    tries = 5
+    for n in xrange(tries):
+        n = random.randint(0, 1000)
+        m = crianza.Machine(crianza.parse(StringIO.StringIO("%d %s" % (n,
+                best.code_string))))
+        m.run()
+        print("    %d square ==> %s" % (n, str(m.top)))
+        if m.top == n*n:
+            correct += 1
+
+    print("")
+    if correct == tries:
+        print("The code seems to be correct.")
+    elif correct > 0:
+        print("The code is not entirely correct, it seems.")
+    else:
+        print("The code is not correct at all!")

@@ -16,16 +16,20 @@ __version__ = "0.2.0"
 
 
 class MachineError(Exception):
+    """A VM runtime error."""
     pass
 
 class ParserError(Exception):
+    """An error occurring during parsing."""
     pass
 
 class CompilationError(Exception):
+    """An error ocurring during compilation."""
     pass
 
 
 class Stack(object):
+    """A stack of values."""
     def __init__(self):
         self._values = []
 
@@ -185,10 +189,13 @@ class Instruction(object):
     @staticmethod
     def write(vm, flush=True):
         value = str(vm.pop())
-        if vm.output is not None:
-            vm.output.write(value)
-            if flush:
-                vm.output.flush()
+        try:
+            if vm.output is not None:
+                vm.output.write(value)
+                if flush:
+                    vm.output.flush()
+        except IOError:
+            raise MachineError(StopIteration)
 
     @staticmethod
     def at(vm):
@@ -198,10 +205,13 @@ class Instruction(object):
     @staticmethod
     def dot(vm, flush=True):
         Instruction.write(vm, flush=False)
-        if vm.output is not None:
-            vm.output.write("\n")
-            if flush:
-                vm.output.flush()
+        try:
+            if vm.output is not None:
+                vm.output.write("\n")
+                if flush:
+                    vm.output.flush()
+        except IOError:
+            raise MachineError(IOError)
 
     @staticmethod
     def read(vm):
@@ -418,11 +428,18 @@ Instruction.default_instructions = {
 
 
 class Machine(object):
-    """A virtual machine engine."""
+    """A virtual machine with code, a data stack and an instruction stack."""
 
     def __init__(self, code, output=sys.stdout, optimize_code=True):
+        """
+        Args:
+            code: The code to run.
+            output: Output stream that the machine's code can write to.
+            optimize_code: If True, optimize the given code.
+        """
         self.reset()
         self._code = code if optimize_code == False else optimize(code)
+        self._optimize = optimize_code
         self.output = output
         self.instructions = Instruction.default_instructions
 
@@ -432,11 +449,12 @@ class Machine(object):
 
     @property
     def code(self):
+        """The machine's code."""
         return self._code
 
     @code.setter
     def code(self, value):
-        self._code = optimize(value)
+        self._code = value if not self._optimize else optimize(value)
 
     @property
     def stack(self):
@@ -444,6 +462,7 @@ class Machine(object):
         return self.data_stack._values
 
     def reset(self):
+        """Reset stacks and instruction pointer."""
         self.data_stack = Stack()
         self.return_stack = Stack()
         self.instruction_pointer = 0
@@ -468,13 +487,16 @@ class Machine(object):
         return " ".join(s)
 
     def pop(self):
+        """Pops the data stack, returning the value."""
         return self.data_stack.pop()
 
     def push(self, value):
+        """Pushes a value on the data stack."""
         self.data_stack.push(value)
 
     @property
     def top(self):
+        """Returns the top of the data stack."""
         return self.data_stack.top
 
     def step(self):
@@ -486,7 +508,9 @@ class Machine(object):
     def run(self, steps=None):
         """Run machine, dispatching instructions.
 
-        If steps is specified, it will run that many instructions.
+        Args:
+            steps: If specified, run that many number of instructions before
+            stopping.
         """
         try:
             while self.instruction_pointer < len(self.code):
@@ -556,6 +580,10 @@ def parse(stream):
     return code
 
 def lookup(instruction):
+    """Looks up instruction, which can either be a function or a string.
+    If it's a string, returns the corresponding method.
+    If it's a function, returns the corresponding name.
+    """
     return Instruction.lookup(instruction)
 
 def check(code):
@@ -714,26 +742,35 @@ def optimize(code, silent=True, ignore_errors=True):
     return constant_fold(code, silent=silent, ignore_errors=ignore_errors)
 
 def isstring(c):
+    """Checks if value is a quoted string."""
     return isinstance(c, str) and c[0]==c[-1]=='"'
 
 def isnumber(c):
+    """Checks if value is an integer, long integer or float."""
     return isinstance(c, int) or isinstance(c, long) or isinstance(c,
             float)
 
 def isbool(c):
+    """Checks if value is boolean."""
     return isinstance(c, bool) or c in [lookup(Instruction.true_),
             lookup(Instruction.false_)]
 
 def isbinary(c):
-    """True if c can be part of binary/bitwise operations."""
+    """Checks if value can be part of binary/bitwise operations."""
     return isnumber(c) or isbool(c)
 
 def isconstant(c):
+    """Checks if value is a boolean, number or string."""
     return isbool(c) or isnumber(c) or isstring(c)
 
 
 def constant_fold(code, silent=True, ignore_errors=True):
-    """Constant-folds simple expressions like 2 3 + to 5."""
+    """Constant-folds simple expressions like 2 3 + to 5.
+
+    Args:
+        silent: Flag that controls whether to print optimizations made.
+        ignore_errors: Whether to raise exceptions on found errors.
+    """
 
     # Loop until we haven't done any optimizations.  E.g., "2 3 + 5 *" will be
     # optimized to "5 5 *" and in the next iteration to 25.
@@ -890,26 +927,32 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
     return code
 
-def print_code(vm, ops_per_line=8):
-    """Prints code and state for VM."""
-    print("IP: %d" % vm.instruction_pointer)
-    print("DS: %s" % str(vm.stack))
-    print("RS: %s" % str(vm.return_stack))
-
-    for addr, op in enumerate(vm.code):
-        if (addr % ops_per_line) == 0 and (addr+1) < len(vm.code):
-            if addr > 0:
-                sys.stdout.write("\n")
-            sys.stdout.write("%0*d  " % (max(4, len(str(len(vm.code)))), addr))
-        value = str(op)
-        if isstring(op):
-            value = repr(op)[1:-1]
-        sys.stdout.write("%s " % value)
-    sys.stdout.write("\n")
-
-
 def repl(optimize_code=True, persist=True):
-    """Starts a simple REPL for this machine."""
+    """Starts a simple REPL for this machine.
+
+    Args:
+        optimize_code: Controls whether to run inputted code through the
+        optimizer.
+
+        persist: If True, the machine is not deleted after each line.
+    """
+
+    def print_code(vm, ops_per_line=8):
+        """Prints code and state for VM."""
+        print("IP: %d" % vm.instruction_pointer)
+        print("DS: %s" % str(vm.stack))
+        print("RS: %s" % str(vm.return_stack))
+
+        for addr, op in enumerate(vm.code):
+            if (addr % ops_per_line) == 0 and (addr+1) < len(vm.code):
+                if addr > 0:
+                    sys.stdout.write("\n")
+                sys.stdout.write("%0*d  " % (max(4, len(str(len(vm.code)))), addr))
+            value = str(op)
+            if isstring(op):
+                value = repr(op)[1:-1]
+            sys.stdout.write("%s " % value)
+        sys.stdout.write("\n")
 
     print("Extra commands for the REPL:")
     print(".code    - print code")

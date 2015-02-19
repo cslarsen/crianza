@@ -1,7 +1,7 @@
 import StringIO
 import operator
 import unittest
-import vm
+from crianza import vm
 
 fibonacci_source = \
 """
