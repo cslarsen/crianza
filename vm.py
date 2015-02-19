@@ -574,7 +574,7 @@ def check(code):
         # Does instruction exist?
         if not isconstant(a):
             try:
-                    lookup(a)
+                lookup(a)
             except Exception, e:
                 raise CompilationError(e)
 
@@ -588,7 +588,7 @@ def check(code):
         binary_ops = [Instruction.binary_not,
                       Instruction.binary_or,
                       Instruction.binary_and]
-        if (not isbool(a)) and safe_lookup(b) in binary_ops:
+        if not isbool(a) and safe_lookup(b) in binary_ops:
             raise CompilationError(
                 "Can only use binary operators on booleans (index %d): %s %s" %
                     (i, a, b))
