@@ -16,6 +16,7 @@ from vm import (
     lookup,
     optimize,
     parse,
+    parse_stream,
     repl,
 )
 

@@ -5,7 +5,7 @@ CRIANZA := $(PYTHONPATH) bin/crianza
 default: test
 
 repl:
-	$(PYTHONPATH) bin/crianza
+	$(PYTHONPATH) bin/crianza --repl
 
 test:
 	$(PYTHON) tests/test.py -v

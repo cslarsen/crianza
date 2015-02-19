@@ -542,7 +542,19 @@ class Machine(object):
                     (op, self.instruction_pointer))
 
 
-def parse(stream):
+def parse(source):
+    """Parses source code returns an array of instructions suitable for
+    optimization and execution by a Machine.
+
+    Args:
+        source: A string or stream containing source code.
+    """
+    if isinstance(source, str):
+        return parse_stream(StringIO.StringIO(source))
+    else:
+        return parse_stream(source)
+
+def parse_stream(stream):
     """Parse a Forth-like language and return code."""
     code = []
     tokens = tokenize.generate_tokens(stream.readline)
@@ -661,7 +673,7 @@ def compile(code, silent=True, ignore_errors=False, optimize_code=True):
         pass this to a Machine without doing optimizations.
 
     Usage:
-        source = parse(StringIO.StringIO("<source code>"))
+        source = parse("<source code>")
         code = compile(source)
         machine = Machine(code, optimize_code=False)
         machine.run()
@@ -979,7 +991,7 @@ def repl(optimize_code=True, persist=True):
                 machine = Machine([])
                 continue
 
-            code = compile(parse(StringIO.StringIO(source)), silent=False,
+            code = compile(parse(source), silent=False,
                     optimize_code=optimize_code)
 
             if not persist:
