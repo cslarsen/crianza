@@ -255,7 +255,7 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
         iterations = 0
         while not stop_function(iterations, survivors):
             iterations += 1
-            log("running ")
+            log("running ... ")
 
             # Run all machines in this generation
             generation = map(run_once, generation)
@@ -283,7 +283,7 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
                 continue
 
             # Create a new generation based on the survivors.
-            log("crossover ")
+            log("crossover ... ")
             cross = lambda _: make_offspring(survivors)
             generation = map(cross, xrange(machines))
 
