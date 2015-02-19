@@ -18,8 +18,11 @@ class DoubleInput(GeneticMachine):
         return DoubleInput(*args, **kw)
 
     def randomize(self, **kw):
-        return super(DoubleInput, self).randomize(number_string_ratio=0.999,
-                instruction_ratio=0.75)
+        ops = ["%", "&", "*", "+", "-", "/", "<", "<>", "=", ">", "^", "abs",
+                "and", "bool", "drop", "dup", "false", "if", "int", "negate",
+                "not", "or", "over", "rot", "swap", "true", "|", "~"]
+        return super(DoubleInput, self).randomize(number_string_ratio=1.0,
+                instruction_ratio=0.75, restrict_to=ops)
 
     def setUp(self):
         self._orig = self._code

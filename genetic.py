@@ -68,9 +68,11 @@ def randomize(vm,
         length=(10,10),
         ints=(0,999),
         strs=(1,10),
+        chars=(32,126),
         instruction_ratio=0.5,
         number_string_ratio=0.8,
-        exclude=[".", "exit", "read", "write", "str"]):
+        exclude=[".", "exit", "read", "write", "str"],
+        restrict_to=None):
 
     """Replaces existing code with completely random instructions. Does not
     optimize code after generating it.
@@ -84,6 +86,8 @@ def randomize(vm,
 
         strs: Inclusive range of the length of strings in the code.
 
+        chars: Inclusive range of characters in random strings.
+
         instruction_ratio: Ratio of instructions to numbers/strings,
         meaning that if this value is 0.5 then there will just as many
         instructions in the code as there are numbers and strings.
@@ -94,24 +98,30 @@ def randomize(vm,
         to avoid the program to hang for user input.  The default value is
         to exclude console i/o and debug instructions.
 
+        restrict_to: Limit instructions to the given list.
+
     Returns:
         The VM.
     """
     vm.code = []
-    instructions = dict([i for i in vm.instructions.items() if i[0] not
-        in exclude])
+    instructions = set(vm.instructions.keys()) - set(exclude)
+
+    if restrict_to is not None:
+        instructions = instructions.intersection(set(restrict_to))
+
+    instructions = list(instructions)
 
     for _ in xrange(random.randint(*length)):
         r = random.random()
         if r <= instruction_ratio:
             # Generate a random instruction
-            vm.code.append(random.choice(instructions.keys()))
+            vm.code.append(random.choice(instructions))
         elif r <= number_string_ratio:
             # Generate a random number
             vm.code.append(random.randint(*ints))
         else:
             # Generate a random string
-            vm.code.append('"%s"' % "".join(chr(random.randint(1,127))
+            vm.code.append('"%s"' % "".join(chr(random.randint(*chars))
                 for n in xrange(0, random.randint(*strs))))
     return vm
 
