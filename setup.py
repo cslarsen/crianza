@@ -6,7 +6,7 @@ except ImportError:
 setup(
     name="crianza",
     version="0.0.1",
-    author="Christian Stigen Larsen"
+    author="Christian Stigen Larsen",
     packages=["crianza"],
     scripts=["bin/crianza"]
     url="https://github.com/cslarsen/crianza",
