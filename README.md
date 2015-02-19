@@ -31,17 +31,21 @@ function:
 
 This is equivalent of computing `(2 + 3) * 4` and puts the result on top of the
 data stack.  We can get this by doing `crianza.eval(...).top`.  The language is
-basically [dialect of
+basically a [dialect of
 Forth](https://en.wikipedia.org/wiki/Forth_(programming_language)).
 
-The above code is automatically optimized.  In fact, it's constant-folded down
-to the result `20`:
+The complete machine is returned.  Here it prints the current value of the
+instruction pointer `ip`, the number of items on the data stack (`|ds|`), the
+number of items on the return stack (`|rs|`) and the value on top of the stack.
+
+`eval` will automatically optimize the code.  In this case, the entire
+expression is constant-folded down to the result `20`:
 
     >>> m = crianza.eval("2 3 + 4 *")
     >>> m.code
     [20]
 
-You can also divert program output to a memory buffer:
+You can divert program output to a memory buffer:
 
     >>> from StringIO import StringIO
     >>> buffer = StringIO()
@@ -51,13 +55,16 @@ You can also divert program output to a memory buffer:
     >>> machine.code_string
     '"Hello, world!" .'
 
-The more elaborate way of doing this is:
+Example: Controlling parsing
+----------------------------
+
+The more elaborate way of parsing and running code is:
 
     from crianza import *
 
     source = "2 3 + 4 *" # or: (2+3) * 4
 
-    code = parse(source)
+    code = compile(parse(source), optimize=False)
     machine = Machine(code)
     machine.run()
 
