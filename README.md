@@ -149,21 +149,28 @@ example files for more information.
 Here is the main part of the code that instructs Crianza to find a
 `square-number` subroutine (see the file `examples/genetic/square-number.py`).
 
-        top = self.top if vm.isnumber(self.top) else 9999.9
+    def score(self):
+        # Goals, what kind of program we want to evolve ...
+        wanted = (
+            self._input**2, # Find a way to calculate n^2
+            0,              # We don't want errors
+            1,              # Don't put a lot of values on the data stack
+            0,              # The return stack should be zero after completion
+            0)              # Code should be as small as possible, but not over
+                            # 5 opcodes (see below on how to encode this goal)
 
-        actual = (top,
+        # ... and the goals corresponding weights
+        weights = (0.10, 0.80, 0.02, 0.02, 0.06)
+
+        # Which values we actually got (and how they can be converted to
+        # numbers) ...
+        actual = (self.top if vm.isnumber(self.top) else 9999.9,
                   1000 if self._error else 0,
                   len(self.stack),
                   len(self.return_stack),
-                  len(self.code))
+                  len(self.code) if len(self.code)<5 else 999)
 
-        wanted = (self._input**2, # We want to find a way to calculate n^2
-                  0, # We don't want errors
-                  1, # We the stack to only consist of the answer
-                  0, # We want the return stack to be zero
-                  2) # We want code to be two instructions
-
-        weights = (0.10, 0.80, 0.02, 0.02, 0.06)
+        # Return a value from 0.0 (perfect score) to 1.0 (infinitely bad score)
         return 1.0 - weighted_tanimoto(actual, wanted, weights)
 
 For the above example, the fitness score encodes several goals:
@@ -172,7 +179,12 @@ For the above example, the fitness score encodes several goals:
   * Runtime and compile time errors in the program are penalized (`1000 if self._error else 0`).
   * The length of the data stack should be exactly one (this makes it easier to embed the resulting code in a subroutine).
   * The return stack should be zero after program completion.
-  * The code length should be two (this is a bit cheating, but this goal has a low weight).
+  * The code length should be no more than 5 instructions, but as small as possible.
+
+For the above, it almost always seems to converge. The obvious result for
+calculating the square of a number is `dup *`, and this is what I usually get,
+although I've also gotten fun variants that are almost correct, such as `dup
+abs *`.
 
 I've not played around much with the GP, but I think it currently does
 crossover quite badly and unintelligently.  It also seems to have problems
