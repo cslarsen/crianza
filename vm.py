@@ -463,7 +463,7 @@ class Machine(object):
         s = []
         for op in self.code:
             if isstring(op):
-                s.append(op)
+                s.append(repr(op)[1:-1])
             else:
                 s.append(str(op))
         return " ".join(s)
