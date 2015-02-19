@@ -8,6 +8,11 @@ See examples in examples-genetic/
 
 import random
 import vm
+import sys
+
+def log(s, stream=sys.stdout):
+    stream.write(s)
+    stream.flush()
 
 def tanimoto_coefficient(a, b):
     """Measured similarity between two points in a multi-dimensional space.
@@ -44,6 +49,9 @@ def weighted_choice(choices):
 def stochastic_choice(machines):
     """Stochastically choose one random machine distributed along their
     scores."""
+    if len(machines) < 4:
+        return random.choice(machines)
+
     r = random.random()
     if r < 0.5:
         return random.choice(machines[:len(machines)/4])
@@ -226,19 +234,31 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
 
         mutation_rate: Rate for each machine's chance of being mutated.
     """
-    generation = [MachineClass().randomize() for n in xrange(machines)]
+    def make_random(n):
+        return MachineClass().randomize()
+
+    def run_once(m):
+        m.setUp()
+        m.run()
+        m.tearDown()
+        return m
+
+    def make_offspring(survivors):
+        a = stochastic_choice(survivors)
+        b = stochastic_choice(survivors)
+        return a.crossover(b)
+
+    generation = map(make_random, xrange(machines))
     survivors = generation
 
     try:
         iterations = 0
         while not stop_function(iterations, survivors):
             iterations += 1
+            log("running ")
 
             # Run all machines in this generation
-            for m in generation:
-                m.setUp()
-                m.run()
-                m.tearDown()
+            generation = map(run_once, generation)
 
             # Sort machines from best to worst
             generation = sorted(generation, key=lambda m: m.score())
@@ -246,25 +266,37 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
             # Select the best
             survivors = generation[:int(survival_rate * len(generation))]
 
+            # Remove code larger than 50
+            for s in survivors:
+                if len(s.code) >= 50:
+                    s._code = s._code[:50]
+
             # Remove dead ones
             survivors = [s for s in survivors if len(s.code)>0]
 
+            #survivors = [s for s in survivors if len(s.code)<=50]
+            # All dead? start with a new set
+            if len(survivors) == 0:
+                log("\nNo survivors, restarting")
+                survivors = map(make_random, xrange(machines))
+                generation = survivors
+                continue
+
             # Create a new generation based on the survivors.
-            generation = []
-            while len(generation) < machines:
-                generation.append(stochastic_choice(survivors).
-                        crossover(stochastic_choice(survivors)))
+            log("crossover ")
+            cross = lambda _: make_offspring(survivors)
+            generation = map(cross, xrange(machines))
 
             # Add mutations from time to time
             for m in generation:
                 if random.random() > mutation_rate:
                     m.mutate()
 
-            print("gen %d 1-fitness %.12f avg code len %.2f avg stack len %.2f" % (
-                iterations,
-                average(survivors, lambda m: m.score()),
-                average(survivors, lambda m: len(m.code)),
-                average(survivors, lambda m: len(m.stack) + len(m.return_stack))))
+            log("\rgen %d 1-fitness %.12f avg code len %.2f avg stack len %.2f\n" %
+                (iterations,
+                 average(survivors, lambda m: m.score()),
+                 average(survivors, lambda m: len(m.code)),
+                 average(survivors, lambda m: len(m.stack) + len(m.return_stack))))
     except KeyboardInterrupt:
         pass
 
