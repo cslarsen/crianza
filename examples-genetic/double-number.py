@@ -17,11 +17,9 @@ class DoubleInput(GeneticMachine):
     def new(self, *args, **kw):
         return DoubleInput(*args, **kw)
 
-    #def randomize(self, **kw):
-    #    exclude = kw.get("exclude", [])
-    #    exclude += ["|", "!", "&", "^", "~", "not", "or", "and", "true", "false"]
-    #    kw["exclude"] = exclude
-    #    return super(DoubleInput, self).randomize(**kw)
+    def randomize(self, **kw):
+        return super(DoubleInput, self).randomize(number_string_ratio=0.999,
+                instruction_ratio=0.75)
 
     def setUp(self):
         self._orig = self._code
@@ -60,7 +58,7 @@ class DoubleInput(GeneticMachine):
 
 if __name__ == "__main__":
     print("Starting ...")
-    survivors = iterate(DoubleInput, DoubleInput.stop)
+    survivors = iterate(DoubleInput, DoubleInput.stop, machines=100)
 
     print("Listing programs from best to worst, unique solutions only.")
     seen = set()
