@@ -146,14 +146,6 @@ index)](https://en.wikipedia.org/wiki/Jaccard_index#Tanimoto_similarity_and_dist
 to relate fitness scores among programs, so you can encode any goal. See the
 example files for more information.
 
-For the above example, the fitness score encodes several goals:
-
-  * The top of the stack `top` should equal the square of the program's input `self._input**2`.
-  * Runtime and compile time errors in the program are penalized (`1000 if self._error else 0`).
-  * The length of the data stack should be exactly one (this makes it easier to embed the resulting code in a subroutine).
-  * The return stack should be zero after program completion.
-  * The code length should be two (this is a bit cheating, but this goal has a low weight).
-
 Here is the main part of the code that instructs Crianza to find a
 `square-number` subroutine (see the file `examples/genetic/square-number.py`).
 
@@ -173,6 +165,19 @@ Here is the main part of the code that instructs Crianza to find a
 
         weights = (0.10, 0.80, 0.02, 0.02, 0.06)
         return 1.0 - weighted_tanimoto(actual, wanted, weights)
+
+For the above example, the fitness score encodes several goals:
+
+  * The top of the stack `top` should equal the square of the program's input `self._input**2`.
+  * Runtime and compile time errors in the program are penalized (`1000 if self._error else 0`).
+  * The length of the data stack should be exactly one (this makes it easier to embed the resulting code in a subroutine).
+  * The return stack should be zero after program completion.
+  * The code length should be two (this is a bit cheating, but this goal has a low weight).
+
+I've not played around much with the GP, but I think it currently does
+crossover quite badly and unintelligently.  It also seems to have problems
+converging on somewhat more advanced programs. But, it's a start, and it's
+definitely a lot of fun!
 
 License and author
 ------------------
