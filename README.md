@@ -104,5 +104,6 @@ License and author
 ------------------
 
 Copyright (C) 2015 Christian Stigen Larsen
-Open source license; see the LICENSE file.
+
+See the LICENSE file for terms.
 
