@@ -9,6 +9,7 @@ from vm import (
     compile,
     constant_fold,
     eval,
+    execute,
     isbinary,
     isbool,
     isconstant,

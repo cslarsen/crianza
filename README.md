@@ -27,21 +27,28 @@ function:
 
     >>> import crianza
     >>> crianza.eval("2 3 + 4 *")
+    20
+
+You can also use `crianza.execute` to get the machine used to execute the
+program:
+
+    >>> crianza.execute("2 3 + 4 *")
     <Machine: ip=1 |ds|=1 |ds|=0 top=20>
 
 This is equivalent of computing `(2 + 3) * 4` and puts the result on top of the
-data stack.  We can get this by doing `crianza.eval(...).top`.  The language is
-basically a [dialect of
+data stack.  We can get this by doing `crianza.execute(...).top` or just use
+`crianza.eval`.  The language is basically a [dialect of
 Forth](https://en.wikipedia.org/wiki/Forth_(programming_language)).
 
 The complete machine is returned.  Here it prints the current value of the
 instruction pointer `ip`, the number of items on the data stack (`|ds|`), the
 number of items on the return stack (`|rs|`) and the value on top of the stack.
 
-`eval` will automatically optimize the code.  In this case, the entire
-expression is constant-folded down to the result `20`:
+`eval` and `execute` will automatically optimize the code (turn off with the
+option `optimize=False`).  In this case, the entire expression is
+constant-folded down to the result `20`:
 
-    >>> m = crianza.eval("2 3 + 4 *")
+    >>> m = crianza.execute("2 3 + 4 *")
     >>> m.code
     [20]
 
@@ -49,7 +56,7 @@ You can divert program output to a memory buffer:
 
     >>> from StringIO import StringIO
     >>> buffer = StringIO()
-    >>> machine = crianza.eval('"Hello, world!" .', output=buffer)
+    >>> machine = crianza.execute('"Hello, world!" .', output=buffer)
     >>> buffer.getvalue()
     'Hello, world!\n'
     >>> machine.code_string

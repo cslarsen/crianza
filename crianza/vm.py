@@ -939,12 +939,48 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
     return code
 
-def eval(source, optimize=True, output=sys.stdout, steps=-1):
-    """Compiles and runs program, returning the machine."""
+def execute(source, optimize=True, output=sys.stdout, steps=-1):
+    """Compiles and runs program, returning the machine used to execute the
+    code.
+
+    Args:
+        optimize: Whether to optimize the code after parsing it.
+        output: Stream which program can write output to.
+        steps: An optional maximum number of instructions to execute on the
+            virtual machine.  Set to -1 for no limit.
+
+    Returns:
+        A Machine instance.
+    """
     code = compile(parse(source), optimize=optimize)
     machine = Machine(code, optimize=False, output=output)
-    machine.run(steps)
-    return machine
+    return machine.run(steps)
+
+def eval(source, optimize=True, output=sys.stdout, steps=-1):
+    """Compiles and runs program, returning the values on the stack.
+
+    To return the machine instead, see execute().
+
+    Args:
+        optimize: Whether to optimize the code after parsing it.
+        output: Stream which program can write output to.
+        steps: An optional maximum number of instructions to execute on the
+            virtual machine.  Set to -1 for no limit.
+
+    Returns:
+        None: If the stack is empty
+        obj: If the stack contains a single value
+        [obj, obj, ...]: If the stack contains many values
+    """
+    machine = execute(source, optimize=optimize, output=output, steps=steps)
+    stack = machine.stack
+
+    if len(stack) == 0:
+        return None
+    elif len(stack) == 1:
+        return stack[-1]
+    else:
+        return stack
 
 def repl(optimize=True, persist=True):
     """Starts a simple REPL for this machine.
