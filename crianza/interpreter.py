@@ -186,5 +186,3 @@ class Machine(object):
         else:
             raise MachineError("Unknown instruction '%s' at index %d" %
                     (op, self.instruction_pointer))
-
-
