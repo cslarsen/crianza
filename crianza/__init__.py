@@ -21,9 +21,9 @@ from vm import (
     isnumber,
     isstring,
     optimized,
-    parse,
-    parse_stream,
     repl,
 )
+
+from parser import (parse, parse_stream)
 
 __version__ = "0.0.1"

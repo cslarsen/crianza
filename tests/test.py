@@ -1,6 +1,6 @@
 import operator
 import unittest
-from crianza import vm, CompileError
+from crianza import vm, CompileError, parse
 
 fibonacci_source = \
 """
@@ -66,7 +66,7 @@ class TestVM(unittest.TestCase):
         self.assertEqual(vm.constant_fold([1, 2, 3, "drop", "drop"]), [1])
 
     def test_program_fibonacci(self):
-        code = vm.compile(vm.parse(fibonacci_source))
+        code = vm.compile(parse(fibonacci_source))
         self.assertEqual(code, [0, 13, 'call', 1, 13, 'call', '@', 16, 'call',
             13, 'call', 'return', 'exit', 'dup', '.', 'return', 'swap', 'over',
             '+', 'return'])
