@@ -94,7 +94,7 @@ class TestVM(unittest.TestCase):
         result = crianza.eval('123 read "howdy" . .', input=fin, output=fout)
         self.assertEqual(result, 123)
         self.assertEqual(fin.getvalue()[fin.tell():], "Input line 2.")
-        self.assertEqual(fout.getvalue(), "howdy\nInput line1.\n")
+        self.assertEqual(fout.getvalue(), "howdy\nInput line 1.\n")
 
 
 if __name__ == "__main__":
