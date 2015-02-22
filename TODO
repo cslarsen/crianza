@@ -1,5 +1,6 @@
+vm: store program as list of native types, not list of strings
 vm: allow floats
+parser: allow negative numbers, "-123" parses as "-" "123"
 vm: fixnum arithmetic (as option)
-vm: cannot parse negative numbers, e.g. "-123" is parsed as "- 123"
 genetic: crossover subregions, not from start to end
 genetic: higher score to programs that terminate within steps
