@@ -1,3 +1,5 @@
+from instructions import (Instruction, lookup)
+
 from errors import (
     CompileError,
     MachineError,
@@ -18,7 +20,6 @@ from vm import (
     isconstant,
     isnumber,
     isstring,
-    lookup,
     optimized,
     parse,
     parse_stream,
