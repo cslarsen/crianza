@@ -608,7 +608,6 @@ def check(code):
 
     for i, a in enumerate(code):
         b = code[i+1] if i+1 < len(code) else None
-        c = code[i+2] if i+2 < len(code) else None
 
         # Does instruction exist?
         if not isconstant(a):
