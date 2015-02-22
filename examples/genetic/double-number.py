@@ -3,9 +3,12 @@ A genetic programming simulation that produces programs that double their input
 values.
 """
 
-from crianza.genetic import *
+import crianza
+import crianza.genetic as gp
+import random
 
-class DoubleInput(GeneticMachine):
+
+class DoubleInput(gp.GeneticMachine):
     """A GP machine that produces programs that double their input values.
 
     E.g., "* 2" or "dup +".
@@ -33,7 +36,7 @@ class DoubleInput(GeneticMachine):
         self._code = self._orig
 
     def score(self):
-        top = self.top if vm.isnumber(self.top) else 9999.9
+        top = self.top if crianza.isnumber(self.top) else 9999.9
 
         actual = (top,
                   1000 if self._error else 0,
@@ -48,17 +51,17 @@ class DoubleInput(GeneticMachine):
                   2) # We want code to be two instructions
 
         weights = (0.10, 0.80, 0.02, 0.02, 0.06)
-        return 1.0 - weighted_tanimoto(actual, wanted, weights)
+        return 1.0 - gp.weighted_tanimoto(actual, wanted, weights)
 
     @staticmethod
     def stop(iterations, generation):
         best = sorted(generation, key=lambda m: m.score())
-        return average(best, lambda s: s.score()) == 0.0
+        return gp.average(best, lambda s: s.score()) == 0.0
 
 
 if __name__ == "__main__":
     print("Starting ...")
-    survivors = iterate(DoubleInput, DoubleInput.stop, machines=100)
+    survivors = gp.iterate(DoubleInput, DoubleInput.stop, machines=100)
 
     print("Listing programs from best to worst, unique solutions only.")
     seen = set()
