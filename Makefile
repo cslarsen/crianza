@@ -28,7 +28,6 @@ lint:
 	pyflakes \
 		crianza/*.py \
 		tests/*.py \
-		examples/language/*.py \
 		examples/genetic/*.py
 
 clean:
