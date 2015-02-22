@@ -3,7 +3,7 @@ import sys
 from compiler import compile
 from errors import ParseError, MachineError, CompileError
 from parser import parse
-from vm import isstring, Machine
+from interpreter import isstring, Machine
 
 
 def repl(optimize=True, persist=True):

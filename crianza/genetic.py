@@ -6,8 +6,8 @@ TIP: Run with pypy for speed.
 See examples in examples-genetic/
 """
 
+import crianza
 import random
-import vm
 import sys
 
 def log(s, stream=sys.stdout):
@@ -133,7 +133,7 @@ def crossover(m, f):
     return m.code[:i] + f.code[j:]
 
 
-class GeneticMachine(vm.Machine):
+class GeneticMachine(crianza.Machine):
     def __init__(self, code=[]):
         super(GeneticMachine, self).__init__(code)
         self._error = False

@@ -1,9 +1,7 @@
-import operator
-import unittest
-
 import crianza
-from crianza import vm, CompileError, parse, Machine, compile
-
+import operator
+import random
+import unittest
 
 fibonacci_source = \
 """
@@ -22,7 +20,7 @@ fibonacci_source = \
 
 class TestVM(unittest.TestCase):
     def _Machine(self, *args):
-        return Machine(*args, output=None)
+        return crianza.Machine(*args, output=None)
 
     def _run(self, *machine_args):
         """Runs machine and returns it."""
@@ -46,15 +44,16 @@ class TestVM(unittest.TestCase):
 
     def test_arithmetic(self):
         ops = [operator.mul, operator.add]
-        for a in range(-10,10):
-            for b in range(-10,10):
-                for op in ops:
-                    self._test_arithmetic(a, b, op)
+        for op in ops:
+            for _ in xrange(0, 100):
+                a = random.randint(-(2**31-1), +(2**31-1))
+                b = random.randint(-(2**31-1), +(2**31-1))
+                self._test_arithmetic(a, b, op)
 
     def test_optimizer_errors(self):
         for op in ["/", "%"]:
             func = lambda: crianza.constant_fold([2, 0, op], ignore_errors=False)
-            self.assertRaises(CompileError, func)
+            self.assertRaises(crianza.CompileError, func)
 
     def test_optimizer(self):
         self.assertEqual(crianza.constant_fold([2,3,"*","."]), [6,"."])
@@ -68,12 +67,12 @@ class TestVM(unittest.TestCase):
         self.assertEqual(crianza.constant_fold([1, 2, 3, "drop", "drop"]), [1])
 
     def test_program_fibonacci(self):
-        code = compile(parse(fibonacci_source))
+        code = crianza.compile(crianza.parse(fibonacci_source))
         self.assertEqual(code, [0, 13, 'call', 1, 13, 'call', '@', 16, 'call',
             13, 'call', 'return', 'exit', 'dup', '.', 'return', 'swap', 'over',
             '+', 'return'])
 
-        machine = Machine(code, output=None, optimize=False)
+        machine = crianza.Machine(code, output=None, optimize=False)
 
         # skip to main loop
         machine.run(11)

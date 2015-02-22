@@ -1,13 +1,13 @@
 from errors import CompileError
-from instructions import lookup, Instruction
-from optimizer import optimized
-
+from interpreter import Machine, isconstant, isstring, isbool
+import instructions
+import optimizer
 
 def check(code):
     """Checks code for obvious errors."""
     def safe_lookup(op):
         try:
-            return lookup(op)
+            return instructions.lookup(op)
         except Exception:
             return op
 
@@ -17,20 +17,21 @@ def check(code):
         # Does instruction exist?
         if not isconstant(a):
             try:
-                lookup(a)
+                instructions.lookup(a)
             except Exception, e:
                 raise CompileError(e)
 
         # Invalid: <str> int
-        if isstring(a) and safe_lookup(b) == Instruction.cast_int:
+        if isstring(a) and safe_lookup(b) == instructions.cast_int:
             raise CompileError(
                 "Cannot convert string to integer (index %d): %s %s" % (i, a,
                     b))
 
         # Invalid: <int> <binary op>
-        binary_ops = [Instruction.binary_not,
-                      Instruction.binary_or,
-                      Instruction.binary_and]
+        binary_ops = [instructions.binary_not,
+                      instructions.binary_or,
+                      instructions.binary_and]
+        #
         if not isbool(a) and safe_lookup(b) in binary_ops:
             raise CompileError(
                 "Can only use binary operators on booleans (index %d): %s %s" %
@@ -101,7 +102,7 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
                 while True:
                     op = it.next()
                     if op == ";":
-                        subroutine[name].append(lookup(Instruction.return_))
+                        subroutine[name].append(instructions.lookup(instructions.return_))
                         break
                     else:
                         subroutine[name].append(op)
@@ -117,7 +118,7 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
         for op in code:
             xcode.append(op)
             if op in subroutine:
-                xcode.append(lookup(Instruction.call))
+                xcode.append(instructions.lookup(instructions.call))
         subroutine[name] = xcode
 
     # Compile main code (code outside of subroutines)
@@ -125,24 +126,24 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
     for op in output:
         xcode.append(op)
         if op in subroutine:
-            xcode.append(lookup(Instruction.call))
+            xcode.append(instructions.lookup(instructions.call))
 
     # Because main code comes before subroutines, we need to explicitly add an
     # exit instruction
     output = xcode
     if len(subroutine) > 0:
-        output += [lookup(Instruction.exit)]
+        output += [instructions.lookup(instructions.exit)]
 
     # Optimize main code
     if optimize:
-        output = optimized(output, silent=silent, ignore_errors=False)
+        output = optimizer.optimized(output, silent=silent, ignore_errors=False)
 
     # Add subroutines to output, track their locations
     location = {}
     for name, code in subroutine.items():
         location[name] = len(output)
         if optimize:
-            output += optimized(code, silent=silent, ignore_errors=False)
+            output += optimizer.optimized(code, silent=silent, ignore_errors=False)
         else:
             output += code
 
@@ -152,7 +153,3 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
             output[i] = location[op]
 
     return check(output)
-
-
-
-from vm import Machine, isconstant, isstring, isbool

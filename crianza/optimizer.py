@@ -1,6 +1,6 @@
-from errors import CompileError
-from instructions import lookup, Instruction
-import vm
+import errors
+import instructions
+import interpreter
 
 
 def optimized(code, silent=True, ignore_errors=True):
@@ -19,22 +19,22 @@ def constant_fold(code, silent=True, ignore_errors=True):
     # optimized to "5 5 *" and in the next iteration to 25.
 
     arithmetic = [
-        lookup(Instruction.add),
-        lookup(Instruction.bitwise_and),
-        lookup(Instruction.bitwise_or),
-        lookup(Instruction.bitwise_xor),
-        lookup(Instruction.div),
-        lookup(Instruction.equal),
-        lookup(Instruction.greater),
-        lookup(Instruction.less),
-        lookup(Instruction.mod),
-        lookup(Instruction.mul),
-        lookup(Instruction.sub),
+        instructions.lookup(instructions.add),
+        instructions.lookup(instructions.bitwise_and),
+        instructions.lookup(instructions.bitwise_or),
+        instructions.lookup(instructions.bitwise_xor),
+        instructions.lookup(instructions.div),
+        instructions.lookup(instructions.equal),
+        instructions.lookup(instructions.greater),
+        instructions.lookup(instructions.less),
+        instructions.lookup(instructions.mod),
+        instructions.lookup(instructions.mul),
+        instructions.lookup(instructions.sub),
     ]
 
     divzero = [
-        lookup(Instruction.div),
-        lookup(Instruction.mod),
+        instructions.lookup(instructions.div),
+        instructions.lookup(instructions.mod),
     ]
 
     keep_running = True
@@ -46,7 +46,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
             c = code[i+2] if i+2 < len(code) else None
 
             # Constant fold arithmetic operations
-            if vm.isnumber(a) and vm.isnumber(b) and c in arithmetic:
+            if interpreter.isnumber(a, b) and c in arithmetic:
                 # Although we can detect division by zero at compile time, we
                 # don't report it here, because the surrounding system doesn't
                 # handle that very well. So just leave it for now.  (NOTE: If
@@ -56,11 +56,11 @@ def constant_fold(code, silent=True, ignore_errors=True):
                     if ignore_errors:
                         continue
                     else:
-                        raise CompileError(
-                                ZeroDivisionError("Division by zero"))
+                        raise errors.CompileError(ZeroDivisionError(
+                            "Division by zero"))
 
                 # Calculate result by running on a machine
-                result = vm.Machine([a,b,c], optimize=False).run().top
+                result = interpreter.Machine([a,b,c], optimize=False).run().top
                 del code[i:i+3]
                 code.insert(i, result)
 
@@ -71,7 +71,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 break
 
             # Translate <constant> dup to <constant> <constant>
-            if vm.isconstant(a) and b == lookup(Instruction.dup):
+            if interpreter.isconstant(a) and b == instructions.lookup(instructions.dup):
                 code[i+1] = a
                 if not silent:
                     print("Optimizer: Translated %s %s to %s %s" % (a,b,a,a))
@@ -79,7 +79,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 break
 
             # Dead code removal: <constant> drop
-            if vm.isconstant(a) and b == lookup(Instruction.drop):
+            if interpreter.isconstant(a) and b == instructions.lookup(instructions.drop):
                 del code[i:i+2]
                 if not silent:
                     print("Optimizer: Removed dead code %s %s" % (a,b))
@@ -87,7 +87,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 break
 
             # Dead code removal: <integer> cast_int
-            if isinstance(a, int) and b == lookup(Instruction.cast_int):
+            if isinstance(a, int) and b == instructions.lookup(instructions.cast_int):
                 del code[i+1]
                 if not silent:
                     print("Optimizer: Translated %s %s to %s" % (a,b,a))
@@ -95,7 +95,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 break
 
             # Dead code removal: <string> cast_str
-            if isinstance(a, str) and b == lookup(Instruction.cast_str):
+            if isinstance(a, str) and b == instructions.lookup(instructions.cast_str):
                 del code[i+1]
                 if not silent:
                     print("Optimizer: Translated %s %s to %s" % (a,b,a))
@@ -103,7 +103,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 break
 
             # Dead code removal: <boolean> cast_bool
-            if isinstance(a, bool) and b == lookup(Instruction.cast_bool):
+            if isinstance(a, bool) and b == instructions.lookup(instructions.cast_bool):
                 del code[i+1]
                 if not silent:
                     print("Optimizer: Translated %s %s to %s" % (a,b,a))
@@ -111,7 +111,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 break
 
             # <c1> <c2> swap -> <c2> <c1>
-            if vm.isconstant(a) and vm.isconstant(b) and c==lookup(Instruction.swap):
+            if interpreter.isconstant(a, b) and c == instructions.lookup(instructions.swap):
                 del code[i:i+3]
                 code = code[:i] + [b, a] + code[i:]
                 if not silent:
@@ -121,7 +121,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 break
 
             # a b over -> a b a
-            if vm.isconstant(a) and vm.isconstant(b) and c==lookup(Instruction.over):
+            if interpreter.isconstant(a, b) and c == instructions.lookup(instructions.over):
                 code[i+2] = a
                 if not silent:
                     print("Optimizer: Translated %s %s %s to %s %s %s" %
@@ -130,7 +130,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 break
 
             # "123" cast_int -> 123
-            if vm.isstring(a) and b == lookup(Instruction.cast_int):
+            if interpreter.isstring(a) and b == instructions.lookup(instructions.cast_int):
                 try:
                     number = int(a[1:-1])
                     del code[i:i+2]
@@ -143,8 +143,8 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 except ValueError:
                     pass
 
-            if vm.isconstant(a) and b == lookup(Instruction.cast_str):
-                if vm.isstring(a):
+            if interpreter.isconstant(a) and b == instructions.lookup(instructions.cast_str):
+                if interpreter.isstring(a):
                     asstring = a[1:-1]
                 else:
                     asstring = str(a)
@@ -156,9 +156,9 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 keep_running = True
                 break
 
-            if vm.isconstant(a) and b == lookup(Instruction.cast_bool):
+            if interpreter.isconstant(a) and b == instructions.lookup(instructions.cast_bool):
                 v = a
-                if vm.isstring(v):
+                if interpreter.isstring(v):
                     v = v[1:-1]
                 v = bool(v)
                 del code[i:i+2]
@@ -167,5 +167,4 @@ def constant_fold(code, silent=True, ignore_errors=True):
                     print("Optimizer: Translated %s %s to %s" % (a, b, v))
                 keep_running = True
                 break
-
     return code
