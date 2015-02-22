@@ -11,21 +11,13 @@ import string
 import sys
 import tokenize
 
+from errors import (
+    CompileError,
+    MachineError,
+    ParseError,
+)
 
-__version__ = "0.2.0"
-
-
-class MachineError(Exception):
-    """A VM runtime error."""
-    pass
-
-class ParserError(Exception):
-    """An error occurring during parsing."""
-    pass
-
-class CompilationError(Exception):
-    """An error ocurring during compilation."""
-    pass
+import crianza
 
 
 class Stack(object):
@@ -574,12 +566,9 @@ def parse_stream(stream):
                 try:
                     code.append(int(value))
                 except ValueError, e:
-                    raise ParserError(e)
+                    raise ParseError(e)
             elif token in [tokenize.OP, tokenize.STRING, tokenize.NAME]:
                 code.append(value)
-#            elif token == tokenize.ERRORTOKEN:
-#                if value == '!':
-#                    code.append(lookup(Instruction.binary_not))
             elif token in [tokenize.NEWLINE, tokenize.NL]:
                 break
             elif token in [tokenize.COMMENT, tokenize.INDENT, tokenize.DEDENT]:
@@ -587,7 +576,7 @@ def parse_stream(stream):
             elif token == tokenize.ENDMARKER:
                 return code
             else:
-                raise ParserError("Unknown token %s: '%s'" %
+                raise ParseError("Unknown token %s: '%s'" %
                         (tokenize.tok_name[token], strip_whitespace(value)))
     return code
 
@@ -614,11 +603,11 @@ def check(code):
             try:
                 lookup(a)
             except Exception, e:
-                raise CompilationError(e)
+                raise CompileError(e)
 
         # Invalid: <str> int
         if isstring(a) and safe_lookup(b) == Instruction.cast_int:
-            raise CompilationError(
+            raise CompileError(
                 "Cannot convert string to integer (index %d): %s %s" % (i, a,
                     b))
 
@@ -627,7 +616,7 @@ def check(code):
                       Instruction.binary_or,
                       Instruction.binary_and]
         if not isbool(a) and safe_lookup(b) in binary_ops:
-            raise CompilationError(
+            raise CompileError(
                 "Can only use binary operators on booleans (index %d): %s %s" %
                     (i, a, b))
 
@@ -689,9 +678,9 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
             if word == ":":
                 name = it.next()
                 if name in builtins:
-                    raise CompilationError("Cannot shadow internal word definition '%s'." % name)
+                    raise CompileError("Cannot shadow internal word definition '%s'." % name)
                 if name in [":", ";"]:
-                    raise CompilationError("Invalid word name '%s'." % name)
+                    raise CompileError("Invalid word name '%s'." % name)
                 subroutine[name] = []
                 while True:
                     op = it.next()
@@ -824,7 +813,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                     if ignore_errors:
                         continue
                     else:
-                        raise CompilationError(
+                        raise CompileError(
                                 ZeroDivisionError("Division by zero"))
 
                 # Calculate result by running on a machine
@@ -1044,7 +1033,7 @@ def repl(optimize=True, persist=True):
             return
         except KeyboardInterrupt:
             return
-        except ParserError, e:
+        except ParseError, e:
             print("Parser error: %s" % e)
         except MachineError, e:
             print("Machine error: %s" % e)
@@ -1055,7 +1044,7 @@ def repl(optimize=True, persist=True):
 if __name__ == "__main__":
     try:
         opt = optparse.OptionParser("Usage: %prog [option(s)] [file(s])",
-                version="%prog " + __version__)
+                version="%prog " + crianza.__version__)
 
         opt.add_option("-d", "--dump", dest="dump",
             help="Dump machine code and exit.",
@@ -1098,10 +1087,10 @@ if __name__ == "__main__":
                 except MachineError, e:
                     print("Runtime error: %s" % e)
                     sys.exit(1)
-                except CompilationError, e:
+                except CompileError, e:
                     print("Compile error: %s" % e)
                     sys.exit(1)
-                except ParserError, e:
+                except ParseError, e:
                     print("Parser error: %s" % e)
                     sys.exit(1)
     except KeyboardInterrupt:

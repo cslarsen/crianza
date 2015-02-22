@@ -61,10 +61,10 @@ def main():
             except crianza.MachineError, e:
                 print("Runtime error: %s" % e)
                 sys.exit(1)
-            except crianza.CompilationError, e:
+            except crianza.CompileError, e:
                 print("Compilation error: %s" % e)
                 sys.exit(1)
-            except crianza.ParserError, e:
+            except crianza.ParseError, e:
                 print("Parser error: %s" % e)
                 sys.exit(1)
 

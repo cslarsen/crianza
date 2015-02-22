@@ -1,9 +1,12 @@
+from errors import (
+    CompileError,
+    MachineError,
+    ParseError,
+)
+
 from vm import (
-    CompilationError,
     Instruction,
     Machine,
-    MachineError,
-    ParserError,
     Stack,
     check,
     compile,

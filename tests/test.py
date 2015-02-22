@@ -1,6 +1,6 @@
 import operator
 import unittest
-from crianza import vm
+from crianza import vm, CompileError
 
 fibonacci_source = \
 """
@@ -51,7 +51,7 @@ class TestVM(unittest.TestCase):
     def test_optimizer_errors(self):
         for op in ["/", "%"]:
             func = lambda: vm.constant_fold([2, 0, op], ignore_errors=False)
-            self.assertRaises(vm.CompilationError, func)
+            self.assertRaises(CompileError, func)
 
     def test_optimizer(self):
         self.assertEqual(vm.constant_fold([2,3,"*","."]), [6,"."])
