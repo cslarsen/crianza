@@ -1,4 +1,6 @@
+from errors import ParseError
 import StringIO
+import string
 import tokenize
 
 

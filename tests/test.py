@@ -1,6 +1,7 @@
 import operator
 import unittest
-from crianza import vm, CompileError, parse
+
+from crianza import vm, CompileError, parse, Machine, compile
 
 fibonacci_source = \
 """
@@ -19,7 +20,7 @@ fibonacci_source = \
 
 class TestVM(unittest.TestCase):
     def _Machine(self, *args):
-        return vm.Machine(*args, output=None)
+        return Machine(*args, output=None)
 
     def _run(self, *machine_args):
         """Runs machine and returns it."""
@@ -66,12 +67,12 @@ class TestVM(unittest.TestCase):
         self.assertEqual(vm.constant_fold([1, 2, 3, "drop", "drop"]), [1])
 
     def test_program_fibonacci(self):
-        code = vm.compile(parse(fibonacci_source))
+        code = compile(parse(fibonacci_source))
         self.assertEqual(code, [0, 13, 'call', 1, 13, 'call', '@', 16, 'call',
             13, 'call', 'return', 'exit', 'dup', '.', 'return', 'swap', 'over',
             '+', 'return'])
 
-        machine = vm.Machine(code, output=None, optimize=False)
+        machine = Machine(code, output=None, optimize=False)
 
         # skip to main loop
         machine.run(11)

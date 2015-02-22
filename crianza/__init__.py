@@ -10,8 +10,6 @@ from vm import (
     Instruction,
     Machine,
     Stack,
-    check,
-    compile,
     constant_fold,
     eval,
     execute,
@@ -25,5 +23,6 @@ from vm import (
 )
 
 from parser import (parse, parse_stream)
+from compiler import (check, compile)
 
 __version__ = "0.0.1"
