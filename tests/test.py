@@ -1,7 +1,9 @@
 import operator
 import unittest
 
+import crianza
 from crianza import vm, CompileError, parse, Machine, compile
+
 
 fibonacci_source = \
 """
@@ -51,20 +53,19 @@ class TestVM(unittest.TestCase):
 
     def test_optimizer_errors(self):
         for op in ["/", "%"]:
-            func = lambda: vm.constant_fold([2, 0, op], ignore_errors=False)
+            func = lambda: crianza.constant_fold([2, 0, op], ignore_errors=False)
             self.assertRaises(CompileError, func)
 
     def test_optimizer(self):
-        self.assertEqual(vm.constant_fold([2,3,"*","."]), [6,"."])
-        self.assertEqual(vm.constant_fold([2,2,3,"*","."]), [2,6,"."])
-        self.assertEqual(vm.constant_fold([5,2,3,"*","+","."]), [11,"."])
-        self.assertEqual(vm.constant_fold([5,2,3,"*","+",4,"*","."]), [44,"."])
-        self.assertEqual(vm.constant_fold([2, 3, "+", 5, "*", "println"]),
-                [25, "println"])
-        self.assertEqual(vm.constant_fold([10, "dup"]), [10, 10])
-        self.assertEqual(vm.constant_fold([1, 2, "dup", "dup", "+", "+"]), [1, 6])
-        self.assertEqual(vm.constant_fold([1, 2, 3, "swap"]), [1, 3, 2])
-        self.assertEqual(vm.constant_fold([1, 2, 3, "drop", "drop"]), [1])
+        self.assertEqual(crianza.constant_fold([2,3,"*","."]), [6,"."])
+        self.assertEqual(crianza.constant_fold([2,2,3,"*","."]), [2,6,"."])
+        self.assertEqual(crianza.constant_fold([5,2,3,"*","+","."]), [11,"."])
+        self.assertEqual(crianza.constant_fold([5,2,3,"*","+",4,"*","."]), [44,"."])
+        self.assertEqual(crianza.constant_fold([2, 3, "+", 5, "*", "println"]), [25, "println"])
+        self.assertEqual(crianza.constant_fold([10, "dup"]), [10, 10])
+        self.assertEqual(crianza.constant_fold([1, 2, "dup", "dup", "+", "+"]), [1, 6])
+        self.assertEqual(crianza.constant_fold([1, 2, 3, "swap"]), [1, 3, 2])
+        self.assertEqual(crianza.constant_fold([1, 2, 3, "drop", "drop"]), [1])
 
     def test_program_fibonacci(self):
         code = compile(parse(fibonacci_source))

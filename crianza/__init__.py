@@ -1,15 +1,12 @@
+from compiler import (check, compile)
+from errors import CompileError, MachineError, ParseError
 from instructions import (Instruction, lookup)
-
-from errors import (
-    CompileError,
-    MachineError,
-    ParseError,
-)
-
+from optimizer import constant_fold, optimized
+from parser import (parse, parse_stream)
+from repl import repl
 from vm import (
     Machine,
     Stack,
-    constant_fold,
     eval,
     execute,
     isbinary,
@@ -18,11 +15,7 @@ from vm import (
     isnumber,
     isstring,
     optimized,
-    repl,
 )
-
-from parser import (parse, parse_stream)
-from compiler import (check, compile)
 
 __version__ = "0.0.1"
 
