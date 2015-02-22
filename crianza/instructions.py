@@ -137,13 +137,20 @@ def dot(vm, flush=True):
         raise errors.MachineError(IOError)
 
 def read(vm):
-    vm.push(raw_input())
+    line = vm.input.readline().rstrip()
+    vm.push(line)
+
+    # To be compatible with the old code that relied on raw_input raising
+    # EOFError, we should also do it for a while (later on, we should use
+    # another mechanism).
+    if line == "":
+        raise EOFError()
 
 def cast_int(vm):
     try:
         int(vm.top)
     except ValueError:
-        raise errors.MachineError("Cannot be cast to int: %s" % str(vm.top))
+        raise errors.MachineError("Cannot be cast to int: '%s'" % str(vm.top))
     else:
         vm.push(int(vm.pop()))
 
@@ -151,7 +158,7 @@ def cast_bool(vm):
     try:
         bool(vm.top)
     except ValueError:
-        raise errors.MachineError("Cannot be cast to bool: %s" % str(vm.top))
+        raise errors.MachineError("Cannot be cast to bool: '%s'" % str(vm.top))
     else:
         vm.push(bool(vm.pop()))
 

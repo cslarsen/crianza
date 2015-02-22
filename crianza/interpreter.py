@@ -1,5 +1,8 @@
+import compiler
+import errors
 import instructions
 import optimizer
+import parser
 import stack
 import sys
 
@@ -29,24 +32,25 @@ def isconstant(*args):
     """Checks if value is a boolean, number or string."""
     return all(map(lambda c: isbool(c) or isnumber(c) or isstring(c), args))
 
-def execute(source, optimize=True, output=sys.stdout, steps=-1):
+def execute(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1):
     """Compiles and runs program, returning the machine used to execute the
     code.
 
     Args:
         optimize: Whether to optimize the code after parsing it.
         output: Stream which program can write output to.
+        input: Stream which program can read input from.
         steps: An optional maximum number of instructions to execute on the
             virtual machine.  Set to -1 for no limit.
 
     Returns:
         A Machine instance.
     """
-    code = compile(parse(source), optimize=optimize)
-    machine = Machine(code, optimize=False, output=output)
+    code = compiler.compile(parser.parse(source), optimize=optimize)
+    machine = Machine(code, optimize=False, output=output, input=input)
     return machine.run(steps)
 
-def eval(source, optimize=True, output=sys.stdout, steps=-1):
+def eval(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1):
     """Compiles and runs program, returning the values on the stack.
 
     To return the machine instead, see execute().
@@ -54,6 +58,7 @@ def eval(source, optimize=True, output=sys.stdout, steps=-1):
     Args:
         optimize: Whether to optimize the code after parsing it.
         output: Stream which program can write output to.
+        input: Stream which program can read input from.
         steps: An optional maximum number of instructions to execute on the
             virtual machine.  Set to -1 for no limit.
 
@@ -62,7 +67,8 @@ def eval(source, optimize=True, output=sys.stdout, steps=-1):
         obj: If the stack contains a single value
         [obj, obj, ...]: If the stack contains many values
     """
-    machine = execute(source, optimize=optimize, output=output, steps=steps)
+    machine = execute(source, optimize=optimize, output=output, input=input,
+            steps=steps)
     stack = machine.stack
 
     if len(stack) == 0:
@@ -76,17 +82,19 @@ def eval(source, optimize=True, output=sys.stdout, steps=-1):
 class Machine(object):
     """A virtual machine with code, a data stack and an instruction stack."""
 
-    def __init__(self, code, output=sys.stdout, optimize=True):
+    def __init__(self, code, output=sys.stdout, input=sys.stdin, optimize=True):
         """
         Args:
             code: The code to run.
             output: Output stream that the machine's code can write to.
+            input: Input stream that the machine's code can read from.
             optimize: If True, optimize the given code.
         """
         self.reset()
         self._code = code if optimize == False else optimizer.optimized(code)
         self._optimize = optimize
         self.output = output
+        self.input = input
         self.instructions = instructions.default_instructions
 
     def lookup(self, instruction):
@@ -184,5 +192,5 @@ class Machine(object):
             # Push unquoted string on data stack
             self.push(op[1:-1])
         else:
-            raise MachineError("Unknown instruction '%s' at index %d" %
+            raise errors.MachineError("Unknown instruction '%s' at index %d" %
                     (op, self.instruction_pointer))

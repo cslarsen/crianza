@@ -1,3 +1,4 @@
+import StringIO
 import crianza
 import operator
 import random
@@ -86,6 +87,15 @@ class TestVM(unittest.TestCase):
 
         self.assertEqual(sequence, [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144,
             233, 377, 610])
+
+    def test_io(self):
+        fin = StringIO.StringIO("Input line 1.\nInput line 2.")
+        fout = StringIO.StringIO()
+        result = crianza.eval('123 read "howdy" . .', input=fin, output=fout)
+        self.assertEqual(result, 123)
+        self.assertEqual(fin.getvalue()[fin.tell():], "Input line 2.")
+        self.assertEqual(fout.getvalue(), "howdy\nInput line1.\n")
+
 
 if __name__ == "__main__":
     unittest.main()
