@@ -1,6 +1,5 @@
 from errors import CompileError
 from instructions import lookup, Instruction
-from vm import Machine, optimized, isconstant, isstring, isbool
 
 
 def check(code):
@@ -153,3 +152,6 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
 
     return check(output)
 
+
+
+from vm import Machine, optimized, isconstant, isstring, isbool

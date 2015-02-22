@@ -3,13 +3,14 @@ A genetic programming simulation that produces programs that double their input
 values.
 """
 
-from crianza.genetic import *
 import StringIO
 import crianza
+import crianza.genetic as gp
+import random
 import sys
 
 
-class DoubleInput(GeneticMachine):
+class DoubleInput(gp.GeneticMachine):
     """A GP machine that produces programs that double their input values.
 
     E.g., "* 2" or "dup +".
@@ -51,19 +52,19 @@ class DoubleInput(GeneticMachine):
 
         # Which values we actually got (and how they can be converted to
         # numbers) ...
-        actual = (self.top if vm.isnumber(self.top) else 9999.9,
+        actual = (self.top if crianza.isnumber(self.top) else 9999.9,
                   1000 if self._error else 0,
                   len(self.stack),
                   len(self.return_stack),
                   len(self.code) if len(self.code)<5 else 999)
 
         # Return a value from 0.0 (perfect score) to 1.0 (infinitely bad score)
-        return 1.0 - weighted_tanimoto(actual, wanted, weights)
+        return 1.0 - gp.weighted_tanimoto(actual, wanted, weights)
 
     @staticmethod
     def stop(iterations, generation):
         best = sorted(generation, key=lambda m: m.score())
-        return average(best, lambda s: s.score()) <= 0.00000012
+        return gp.average(best, lambda s: s.score()) <= 0.00000012
 
 
 def splitlines(code, width):
@@ -77,7 +78,7 @@ def splitlines(code, width):
 if __name__ == "__main__":
     print("Starting ...")
 
-    survivors = iterate(DoubleInput, DoubleInput.stop, machines=100)
+    survivors = gp.iterate(DoubleInput, DoubleInput.stop, machines=100)
 
     print("\nListing programs from best to worst, unique solutions only.")
     seen = set()

@@ -430,8 +430,6 @@ def repl(optimize=True, persist=True):
             print("Parser error: %s" % e)
         except MachineError, e:
             print("Machine error: %s" % e)
-        except Exception, e:
-            print("Error: %s" % e)
 
 
 if __name__ == "__main__":
@@ -488,3 +486,6 @@ if __name__ == "__main__":
                     sys.exit(1)
     except KeyboardInterrupt:
         pass
+
+
+from compiler import compile
