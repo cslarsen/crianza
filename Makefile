@@ -15,12 +15,7 @@ test-genetic:
 	$(PYTHON) examples/genetic/square-number.py
 
 test-examples:
-	(echo 1; echo 2; echo 3) | $(CRIANZA) examples/language/even-odd.source
-	$(CRIANZA) examples/language/fibonacci.source | head -15
-	$(CRIANZA) examples/language/fibonacci-2.source | head -15
-	$(CRIANZA) examples/language/subroutine-1.source
-	$(CRIANZA) examples/language/sum-mul-1.source
-	(echo 11; echo 22) | $(CRIANZA) examples/language/sum-mul-2.source
+	$(CRIANZA) examples/fibonacci.source | head -15
 
 check: test test-examples test-genetic
 
