@@ -168,12 +168,12 @@ class Machine(object):
 
     def step(self):
         """Executes one instruction and stops."""
-        instruction = self.code[self.instruction_pointer]
+        op = self.code[self.instruction_pointer]
         self.instruction_pointer += 1
-        self.dispatch(instruction)
+        op(self)
 
     def run(self, steps=None):
-        """Run machine, dispatching instructions.
+        """Run threaded code in machine.
 
         Args:
             steps: If specified, run that many number of instructions before
@@ -192,16 +192,3 @@ class Machine(object):
         except EOFError:
             pass
         return self
-
-    def dispatch(self, op):
-        """Executes one operation by dispatching to a function."""
-        # New version where everything, including pushes, are functions
-        # (embedded push):
-        #assert(callable(op))
-        op(self)
-
-        # Old, stable version
-        #if callable(op):
-        #    op(self)
-        #else:
-        #    self.push(op)
