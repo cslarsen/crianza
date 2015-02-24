@@ -107,12 +107,14 @@ if __name__ == "__main__":
     tries = 5
     for n in xrange(tries):
         n = random.randint(0, 1000)
-        m = crianza.Machine(crianza.parse(StringIO.StringIO("%d %s" % (n,
-                best.code_string))))
-        m.run()
-        print("    %d square ==> %s" % (n, str(m.top)))
-        if m.top == n*n:
-            correct += 1
+        try:
+            r = crianza.eval("%d %s" % (n, best.code_string))
+            print("    %d square ==> %s" % (n, r))
+            if r == n*n:
+                correct += 1
+        except:
+            print("    (genetic program crashed)")
+            continue
 
     print("")
     if correct == tries:

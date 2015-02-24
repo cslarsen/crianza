@@ -115,7 +115,7 @@ def randomize(vm,
         r = random.random()
         if r <= instruction_ratio:
             # Generate a random instruction
-            vm.code.append(random.choice(instructions))
+            vm.code.append(crianza.lookup(random.choice(instructions)))
         elif r <= number_string_ratio:
             # Generate a random number
             vm.code.append(random.randint(*ints))
@@ -279,7 +279,7 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
             # Remove code larger than 50
             for s in survivors:
                 if len(s.code) >= 50:
-                    s._code = s._code[:50]
+                    s.code = s.code[:50]
 
             # Remove dead ones
             survivors = [s for s in survivors if len(s.code)>0]
