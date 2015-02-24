@@ -35,7 +35,7 @@ def parse_and_run(file, opts):
             ignore_errors=False,
             optimize=opts.optimize)
 
-    machine = crianza.Machine(code, optimize=False)
+    machine = crianza.Machine(code)
 
     if not opts.dump:
         machine.run()
@@ -43,6 +43,19 @@ def parse_and_run(file, opts):
         print(machine.code_string)
 
 def main():
+    def run(file, opts):
+        try:
+            parse_and_run(file, opts)
+        except crianza.MachineError, e:
+            print("Runtime error: %s" % e)
+            sys.exit(1)
+        except crianza.CompileError, e:
+            print("Compilation error: %s" % e)
+            sys.exit(1)
+        except crianza.ParseError, e:
+            print("Parser error: %s" % e)
+            sys.exit(1)
+
     opt = options()
     (opts, args) = opt.parse_args()
 
@@ -55,18 +68,11 @@ def main():
         sys.exit(1)
 
     for name in args:
-        with open(name, "rt") as file:
-            try:
-                parse_and_run(file, opts)
-            except crianza.MachineError, e:
-                print("Runtime error: %s" % e)
-                sys.exit(1)
-            except crianza.CompileError, e:
-                print("Compilation error: %s" % e)
-                sys.exit(1)
-            except crianza.ParseError, e:
-                print("Parser error: %s" % e)
-                sys.exit(1)
+        if name=="-":
+            run(sys.stdin, opts)
+        else:
+            with open(name, "rt") as file:
+                run(file, opts)
 
 if __name__ == "__main__":
     try:

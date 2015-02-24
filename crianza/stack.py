@@ -2,8 +2,11 @@ from errors import MachineError
 
 class Stack(object):
     """A stack of values."""
-    def __init__(self):
-        self._values = []
+    def __init__(self, values=None):
+        self._values = values
+
+        if self._values is None:
+            self._values = []
 
     def pop(self):
         if len(self._values) == 0:
@@ -28,3 +31,9 @@ class Stack(object):
 
     def __getitem__(self, key):
         return self._values[key]
+
+    def __eq__(self, obj):
+        return self._values == obj._values
+
+    def __ne__(self, obj):
+        return self._values != obj._values

@@ -8,7 +8,7 @@ import sys
 
 def isstring(*args):
     """Checks if value is a quoted string."""
-    return all(map(lambda c: isinstance(c, str) and c[0]==c[-1]=='"', args))
+    return all(map(lambda c: isinstance(c, str), args))
 
 def isnumber(*args):
     """Checks if value is an integer, long integer or float.
@@ -47,7 +47,7 @@ def execute(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1)
         A Machine instance.
     """
     code = compiler.compile(parser.parse(source), optimize=optimize)
-    machine = Machine(code, optimize=False, output=output, input=input)
+    machine = Machine(code, output=output, input=input)
     return machine.run(steps)
 
 def eval(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1):
@@ -82,7 +82,7 @@ def eval(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1):
 class Machine(object):
     """A virtual machine with code, a data stack and an instruction stack."""
 
-    def __init__(self, code, output=sys.stdout, input=sys.stdin, optimize=True):
+    def __init__(self, code, output=sys.stdout, input=sys.stdin):
         """
         Args:
             code: The code to run.
@@ -91,8 +91,7 @@ class Machine(object):
             optimize: If True, optimize the given code.
         """
         self.reset()
-        self._code = code if optimize == False else optimizer.optimized(code)
-        self._optimize = optimize
+        self.code = code
         self.output = output
         self.input = input
         self.instructions = instructions.default_instructions
@@ -100,15 +99,6 @@ class Machine(object):
     def lookup(self, instruction):
         """Looks up name-to-function or function-to-name."""
         return instructions.lookup(instruction, self.instructions)
-
-    @property
-    def code(self):
-        """The machine's code."""
-        return self._code
-
-    @code.setter
-    def code(self, value):
-        self._code = value if not self._optimize else optimizer.optimized(value)
 
     @property
     def stack(self):
@@ -134,15 +124,22 @@ class Machine(object):
         """Returns code as a parseable string."""
         s = []
         for op in self.code:
-            if isstring(op):
-                s.append(repr(op)[1:-1])
+            if isconstant(op):
+                if isstring(op):
+                    s.append(repr(op))
+                else:
+                    s.append(str(op))
             else:
-                s.append(str(op))
+                s.append(str(instructions.lookup(op)))
         return " ".join(s)
 
     def pop(self):
         """Pops the data stack, returning the value."""
-        return self.data_stack.pop()
+        try:
+            return self.data_stack.pop()
+        except errors.MachineError, e:
+            raise errors.MachineError("%s: At index %d in code: %s" %
+                    (e, self.instruction_pointer, self.code_string))
 
     def push(self, value):
         """Pushes a value on the data stack."""
@@ -182,15 +179,7 @@ class Machine(object):
 
     def dispatch(self, op):
         """Executes one operation by dispatching to a function."""
-        if op in self.instructions:
-            instruction = self.instructions[op]
-            instruction(self)
-        elif isnumber(op):
-            # Push numbers on data stack
-            self.push(op)
-        elif isstring(op):
-            # Push unquoted string on data stack
-            self.push(op[1:-1])
+        if callable(op):
+            op(self)
         else:
-            raise errors.MachineError("Unknown instruction '%s' at index %d" %
-                    (op, self.instruction_pointer))
+            self.push(op)

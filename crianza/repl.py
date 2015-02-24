@@ -30,11 +30,14 @@ def repl(optimize=True, persist=True):
             value = str(op)
             if isstring(op):
                 value = repr(op)[1:-1]
+            if callable(op):
+                value = op.__name__
             sys.stdout.write("%s " % value)
         sys.stdout.write("\n")
 
     print("Extra commands for the REPL:")
     print(".code    - print code")
+    print(".raw     - print raw code")
     print(".quit    - exit immediately")
     print(".reset   - reset machine (IP and stacks)")
     print(".restart - create a clean, new machine")
@@ -46,16 +49,19 @@ def repl(optimize=True, persist=True):
         try:
             source = raw_input("> ").strip()
 
-            if source == ".quit":
-                return
-            elif source == ".code":
-                print_code(machine)
-                continue
-            elif source == ".reset":
-                machine.reset()
-                continue
-            elif source == ".restart":
-                machine = Machine([])
+            if source[0] == ".":
+                if source == ".quit":
+                    return
+                elif source == ".code":
+                    print_code(machine)
+                elif source == ".raw":
+                    print(machine.code)
+                elif source == ".reset":
+                    machine.reset()
+                elif source == ".restart":
+                    machine = Machine([])
+                else:
+                    raise ParseError("Unknown command: %s" % source)
                 continue
 
             code = compile(parse(source), silent=False, optimize=optimize)

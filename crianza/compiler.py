@@ -1,6 +1,7 @@
 from errors import CompileError
-from interpreter import Machine, isconstant, isstring, isbool
+from interpreter import Machine, isconstant, isstring, isbool, isnumber
 import instructions
+import interpreter
 import optimizer
 
 def check(code):
@@ -31,12 +32,11 @@ def check(code):
         binary_ops = [instructions.binary_not,
                       instructions.binary_or,
                       instructions.binary_and]
-        #
+
         if not isbool(a) and safe_lookup(b) in binary_ops:
             raise CompileError(
                 "Can only use binary operators on booleans (index %d): %s %s" %
                     (i, a, b))
-
     return code
 
 def compile(code, silent=True, ignore_errors=False, optimize=True):
@@ -83,6 +83,7 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
         machine = Machine(code, optimize=False)
         machine.run()
     """
+    assert(isinstance(code, list))
 
     output = []
     subroutine = {}
@@ -152,4 +153,28 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
         if op in location:
             output[i] = location[op]
 
-    return check(output)
+    return check(_native_types(output))
+
+def to_bool(instr):
+    if isinstance(instr, bool):
+        return instr
+    elif instr == instructions.lookup(instructions.true_):
+        return True
+    elif instr == instructions.lookup(instructions.false_):
+        return False
+    else:
+        raise CompileError("Unknown instruction: %s" % instr)
+
+def _native_types(code):
+    """Convert code elements from strings to native Python types."""
+    out = []
+    for c in code:
+        if isstring(c) and (c[0]==c[-1]=='"' or c[0]==c[-1]=="'"):
+            out.append(c[1:-1])
+        elif isbool(c):
+            out.append(to_bool(c))
+        elif isnumber(c):
+            out.append(c)
+        else:
+            out.append(instructions.lookup(c))
+    return out
