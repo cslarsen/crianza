@@ -30,12 +30,12 @@ class DoubleInput(gp.GeneticMachine):
                 instruction_ratio=0.75, restrict_to=ops)
 
     def setUp(self):
-        self._orig = self._code
+        self._orig = self.code
         self._input = random.randint(0,100)
-        self._code = [self._input] + self._code
+        self.code = [self._input] + self.code
 
     def tearDown(self):
-        self._code = self._orig
+        self.code = self._orig
 
     def score(self):
         # Goals, what kind of program we want to evolve ...
@@ -116,8 +116,8 @@ if __name__ == "__main__":
 
     print("")
     if correct == tries:
-        print("The code seems to be correct.")
+        print("The code SEEMS to be CORRECT.")
     elif correct > 0:
-        print("The code is not entirely correct, it seems.")
+        print("The code is NOT entirely correct, it seems.")
     else:
-        print("The code is not correct at all!")
+        print("The code is NOT correct at all!")

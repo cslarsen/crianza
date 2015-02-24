@@ -28,12 +28,12 @@ class DoubleInput(gp.GeneticMachine):
                 instruction_ratio=0.75, restrict_to=ops)
 
     def setUp(self):
-        self._orig = self._code
+        self._orig = self.code
         self._input = random.randint(0,100)
-        self._code = [self._input] + self._code
+        self.code = [self._input] + self.code
 
     def tearDown(self):
-        self._code = self._orig
+        self.code = self._orig
 
     def score(self):
         top = self.top if crianza.isnumber(self.top) else 9999.9
