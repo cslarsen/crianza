@@ -1,6 +1,8 @@
 PYTHONPATH := PYTHONPATH=.:$$PYTHONPATH
-PYTHON := $(PYTHONPATH) pypy
 CRIANZA := $(PYTHONPATH) bin/crianza
+
+# Tip: Try changing "python" to "pypy"
+PYTHON := $(PYTHONPATH) python
 
 default: test
 
