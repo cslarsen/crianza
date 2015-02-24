@@ -12,6 +12,7 @@ The VM contains:
   * Some simple peephole optimizations
   * Simple correctness checking
   * Compilation from source language down to machine language
+  * Threaded code interpretation
 
 The genetic programming part uses a simple evolutionary approach with crossover
 and weighted Tanimoto coefficients to relate fitness scores.
