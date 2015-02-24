@@ -1,6 +1,8 @@
-vm: store program as list of native types, not list of strings
-vm: allow floats
-parser: allow negative numbers, "-123" parses as "-" "123"
-vm: fixnum arithmetic (as option)
-genetic: crossover subregions, not from start to end
-genetic: higher score to programs that terminate within steps
+- make it possible to refer to source code locations on compile errors (just
+    create a list with source locations for each op)
+- vm: store program as list of native types, not list of strings
+- vm: allow floats
+- parser: allow negative numbers, "-123" parses as "-" "123"
+- vm: fixnum arithmetic (as option)
+- genetic: crossover subregions, not from start to end
+- genetic: higher score to programs that terminate within steps
