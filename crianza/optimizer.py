@@ -164,7 +164,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 del code[i:i+2]
                 code.insert(i, str(a))
                 if not silent:
-                    print("Optimizer: Translated %s %s to %s" % (a, b, asstring))
+                    print("Optimizer: Translated %s %s to %s" % (a, b, str(a)))
                 keep_running = True
                 break
 
@@ -172,7 +172,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 del code[i:i+2]
                 code.insert(i, bool(a))
                 if not silent:
-                    print("Optimizer: Translated %s %s to %s" % (a, b, v))
+                    print("Optimizer: Translated %s %s to %s" % (a, b, bool(a)))
                 keep_running = True
                 break
     return code

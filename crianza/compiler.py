@@ -1,8 +1,6 @@
 from errors import CompileError
 from interpreter import Machine, isconstant, isstring, isbool, isnumber
-import inspect
 import instructions
-import interpreter
 import optimizer
 
 EMBEDDED_PUSH_TAG = "embedded_push"
@@ -48,7 +46,7 @@ def check(code):
                 # Skip embedded push closures
                 if not (len(err.args)==1 and is_embedded_push(err.args[0])):
                     raise CompileError("Instruction at index %d is unknown: %s"
-                            % (i, name))
+                            % (i, a))
 
         # Invalid: <str> int
         if isstring(a) and safe_lookup(b) == instructions.cast_int:

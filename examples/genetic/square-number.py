@@ -3,7 +3,6 @@ A genetic programming simulation that produces programs that double their input
 values.
 """
 
-import StringIO
 import crianza
 import crianza.genetic as gp
 import random
@@ -109,7 +108,7 @@ if __name__ == "__main__":
     for n in xrange(tries):
         n = random.randint(0, 1000)
         try:
-            r = crianza.eval("%d %s" % (n, best.code_string))
+            r = crianza.execute("%d %s" % (n, best.code_string)).top
             print("    %d square ==> %s" % (n, r))
             if r == n*n:
                 correct += 1

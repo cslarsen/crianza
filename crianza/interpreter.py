@@ -1,7 +1,6 @@
 import compiler
 import errors
 import instructions
-import optimizer
 import parser
 import stack
 import sys
@@ -83,14 +82,14 @@ def eval(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1):
     """
     machine = execute(source, optimize=optimize, output=output, input=input,
             steps=steps)
-    stack = machine.stack
+    ds = machine.stack
 
-    if len(stack) == 0:
+    if len(ds) == 0:
         return None
-    elif len(stack) == 1:
-        return stack[-1]
+    elif len(ds) == 1:
+        return ds[-1]
     else:
-        return stack
+        return ds
 
 
 class Machine(object):
