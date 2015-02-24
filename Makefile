@@ -17,7 +17,7 @@ test-genetic:
 	$(PYTHON) examples/genetic/square-number.py
 
 test-examples:
-	$(CRIANZA) examples/fibonacci.source | head -15
+	$(CRIANZA) examples/fibonacci.source | head -15 | tr '\n' ' '; echo ""
 
 check: test test-examples test-genetic
 

@@ -6,9 +6,19 @@ import parser
 import stack
 import sys
 
-def isstring(*args):
-    """Checks if value is a quoted string."""
-    return all(map(lambda c: isinstance(c, str), args))
+def isstring(args, quoted=False):
+    """Checks if value is a (quoted) string."""
+    isquoted = lambda c: c[0]==c[-1] and c[0] in ['"', "'"]
+
+    if quoted:
+        check = lambda c: isinstance(c, str) and isquoted(c)
+    else:
+        check = lambda c: isinstance(c, str)
+
+    if isinstance(args, list):
+        return all(map(check, args))
+    else:
+        return check(args)
 
 def isnumber(*args):
     """Checks if value is an integer, long integer or float.
@@ -28,9 +38,13 @@ def isbinary(*args):
     """Checks if value can be part of binary/bitwise operations."""
     return all(map(lambda c: isnumber(c) or isbool(c), args))
 
-def isconstant(*args):
+def isconstant(args, quoted=False):
     """Checks if value is a boolean, number or string."""
-    return all(map(lambda c: isbool(c) or isnumber(c) or isstring(c), args))
+    check = lambda c: isbool(c) or isnumber(c) or isstring(c, quoted)
+    if isinstance(args, list):
+        return all(map(check, args))
+    else:
+        return check(args)
 
 def execute(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1):
     """Compiles and runs program, returning the machine used to execute the
@@ -129,6 +143,8 @@ class Machine(object):
                     s.append(repr(op))
                 else:
                     s.append(str(op))
+            elif compiler.is_embedded_push(op):
+                s.append(str(compiler.get_embedded_push_value(op)))
             else:
                 s.append(str(instructions.lookup(op)))
         return " ".join(s)
@@ -179,6 +195,8 @@ class Machine(object):
 
     def dispatch(self, op):
         """Executes one operation by dispatching to a function."""
+        #assert(callable(op))
+        #op(self)
         if callable(op):
             op(self)
         else:

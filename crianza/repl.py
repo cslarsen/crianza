@@ -1,6 +1,6 @@
 import sys
 
-from compiler import compile
+from compiler import compile, is_embedded_push, get_embedded_push_value
 from errors import ParseError, MachineError, CompileError
 from parser import parse
 from interpreter import isstring, Machine
@@ -22,17 +22,23 @@ def repl(optimize=True, persist=True):
         print("DS: %s" % str(vm.stack))
         print("RS: %s" % str(vm.return_stack))
 
+        def to_str(op):
+            if is_embedded_push(op):
+                op = get_embedded_push_value(op)
+
+            if isstring(op):
+                return repr(op)[1:-1]
+            elif callable(op):
+                return vm.lookup(op)
+            else:
+                return str(op)
+
         for addr, op in enumerate(vm.code):
             if (addr % ops_per_line) == 0 and (addr+1) < len(vm.code):
                 if addr > 0:
                     sys.stdout.write("\n")
                 sys.stdout.write("%0*d  " % (max(4, len(str(len(vm.code)))), addr))
-            value = str(op)
-            if isstring(op):
-                value = repr(op)[1:-1]
-            if callable(op):
-                value = op.__name__
-            sys.stdout.write("%s " % value)
+            sys.stdout.write("%s " % to_str(op))
         sys.stdout.write("\n")
 
     print("Extra commands for the REPL:")

@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 import crianza
+import crianza.compiler
 import optparse
 import sys
 
@@ -30,6 +31,9 @@ def options():
 
 def print_code(vm, ops_per_line=10):
     def to_str(op):
+        if crianza.compiler.is_embedded_push(op):
+            op = crianza.compiler.get_embedded_push_value(op)
+
         if crianza.isstring(op):
             return repr(op)[1:-1]
         elif callable(op):

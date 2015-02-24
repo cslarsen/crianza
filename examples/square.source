@@ -1,0 +1,7 @@
+# Run with:
+#     bin/crianza -vd square.source
+#
+# The output should show that the optimizer constant folds this program down to
+# simply `144 .`.
+
+12 dup * .

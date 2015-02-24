@@ -1,8 +1,33 @@
 from errors import CompileError
 from interpreter import Machine, isconstant, isstring, isbool, isnumber
+import inspect
 import instructions
 import interpreter
 import optimizer
+
+EMBEDDED_PUSH_TAG = "embedded_push"
+
+def make_embedded_push(value):
+    """Returns a closure that pushed the given value onto a Machine's stack.
+
+    We use this to embed stack pushes in the VM code, so that the interpreter
+    can assume that all instructions are callable Python functions. This makes
+    dispatching much faster than checking if an instruction is a constant
+    (number, string, etc) or a Python function.
+    """
+    push = lambda vm: vm.push(value)
+    push.tag = EMBEDDED_PUSH_TAG
+    return push
+
+def is_embedded_push(obj):
+    """Checks if an instruction object is an embedded push."""
+    return callable(obj) and hasattr(obj, "tag") and obj.tag==EMBEDDED_PUSH_TAG
+
+def get_embedded_push_value(obj):
+    """Extracts the embedded push value."""
+    assert(is_embedded_push(obj))
+    assert(len(obj.func_closure) == 1)
+    return obj.func_closure[0].cell_contents
 
 def check(code):
     """Checks code for obvious errors."""
@@ -19,8 +44,11 @@ def check(code):
         if not isconstant(a):
             try:
                 instructions.lookup(a)
-            except Exception, e:
-                raise CompileError(e)
+            except KeyError, err:
+                # Skip embedded push closures
+                if not (len(err.args)==1 and is_embedded_push(err.args[0])):
+                    raise CompileError("Instruction at index %d is unknown: %s"
+                            % (i, name))
 
         # Invalid: <str> int
         if isstring(a) and safe_lookup(b) == instructions.cast_int:
@@ -153,7 +181,10 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
         if op in location:
             output[i] = location[op]
 
-    return check(_native_types(output))
+    output = native_types(output)
+    if not ignore_errors:
+        check(output)
+    return output
 
 def to_bool(instr):
     if isinstance(instr, bool):
@@ -165,16 +196,23 @@ def to_bool(instr):
     else:
         raise CompileError("Unknown instruction: %s" % instr)
 
-def _native_types(code):
+def native_types(code):
     """Convert code elements from strings to native Python types."""
     out = []
     for c in code:
-        if isstring(c) and (c[0]==c[-1]=='"' or c[0]==c[-1]=="'"):
-            out.append(c[1:-1])
-        elif isbool(c):
-            out.append(to_bool(c))
-        elif isnumber(c):
-            out.append(c)
+        if isconstant(c, quoted=True):
+            if isstring(c, quoted=True):
+                v = c[1:-1]
+            elif isbool(c):
+                v = to_bool(c)
+            elif isnumber(c):
+                v = c
+            else:
+                raise CompileError("Unknown type %s: %s" % (type(c).__name__, c))
+
+            # Instead of pushing constants in the code, we always push callable
+            # Python functions, for fast dispatching:
+            out.append(make_embedded_push(v))
         else:
             out.append(instructions.lookup(c))
     return out

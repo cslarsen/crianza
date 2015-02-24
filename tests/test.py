@@ -6,6 +6,12 @@ import random
 import sys
 import unittest
 
+from crianza.compiler import (
+    get_embedded_push_value,
+    is_embedded_push,
+    native_types,
+)
+
 fibonacci_source = \
 """
 # The Fibonacci Sequence
@@ -67,35 +73,30 @@ class TestVM(unittest.TestCase):
                 self._test_arithmetic(a, b, op)
 
     def test_optimizer_errors(self):
-        for op in ["/", "%"]:
+        for op in [crianza.instructions.div, crianza.instructions.mod]:
             instr = crianza.instructions.lookup(op)
             func = lambda: crianza.constant_fold([2, 0, instr], ignore_errors=False)
             self.assertRaises(crianza.CompileError, func)
 
     def test_optimizer(self):
-        comp = lambda s: crianza.compile(crianza.parse(s), optimize=False)
-        fold = lambda s: crianza.constant_fold(comp(s))
-        lookup = lambda x: crianza.instructions.lookup(x)
-        testeq = lambda s, e: self.assertEqual(fold(s), e)
-
-        testeq("2 3 * .", [6, lookup(".")])
-        testeq("2 2 3 * .", [2, 6, lookup(".")])
-        testeq("5 2 3 * + .", [11, lookup(".")])
-        testeq("5 2 3 * + 4 * .", [44, lookup(".")])
-        testeq("2 3 + 5 * write", [25, lookup("write")])
-        testeq("10 dup", [10, 10])
-        testeq("1 2 dup dup + +", [1, 6])
-        testeq("1 2 3 swap", [1, 3, 2])
-        testeq("1 2 3 drop drop", [1])
-        testeq("1 123 str", [1, "123"])
-        testeq('1 "112" int', [1, 112])
-        testeq("1 123 str int", [1, 123])
+        self.assertEqual(crianza.constant_fold([2,3,"*","."]), [6, "."])
+        self.assertEqual(crianza.constant_fold([2,2,3,"*","."]), [2, 6, "."])
+        self.assertEqual(crianza.constant_fold([5,2,3,"*","+","."]), [11, "."])
+        self.assertEqual(crianza.constant_fold([5,2,3,"*","+",4,"*","."]), [44, "."])
+        self.assertEqual(crianza.constant_fold([2,3,"+",5,"*","write"]), [25, "write"])
+        self.assertEqual(crianza.constant_fold([10, "dup"]), [10, 10])
+        self.assertEqual(crianza.constant_fold([1,2,"dup","dup","+","+"]), [1,6])
+        self.assertEqual(crianza.constant_fold([1,2,3,"swap"]), [1,3,2])
+        self.assertEqual(crianza.constant_fold([1,2,3,"drop","drop"]), [1])
+        self.assertEqual(crianza.constant_fold([1, 123, "str"]), [1, "123"])
+        self.assertEqual(crianza.constant_fold([1, "112", "int"]), [1, 112])
+        self.assertEqual(crianza.constant_fold([1, 123, "str", "int"]), [1, 123])
 
     def test_program_fibonacci(self):
         code = crianza.compile(crianza.parse(fibonacci_source))
-        self.assertEqual(code, crianza.compiler._native_types([0, 13, 'call', 1, 13, 'call', '@', 16, 'call',
-            13, 'call', 'return', 'exit', 'dup', '.', 'return', 'swap', 'over',
-            '+', 'return']))
+        self.assertEqual(code, native_types([0, 13, 'call', 1,
+            13, 'call', '@', 16, 'call', 13, 'call', 'return', 'exit', 'dup',
+            '.', 'return', 'swap', 'over', '+', 'return']))
 
         machine = crianza.Machine(code, output=None)
 

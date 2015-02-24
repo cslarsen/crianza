@@ -1,0 +1,4 @@
+# Run with: bin/crianza -vd divzero.source
+# Should give a compilation error.
+
+10 0 / .
