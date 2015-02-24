@@ -71,7 +71,7 @@ def randomize(vm,
         chars=(32,126),
         instruction_ratio=0.5,
         number_string_ratio=0.8,
-        exclude=[".", "exit", "read", "write", "str"],
+        exclude=map(crianza.instructions.lookup, [".", "exit", "read", "write", "str"]),
         restrict_to=None):
 
     """Replaces existing code with completely random instructions. Does not
@@ -104,7 +104,7 @@ def randomize(vm,
         The VM.
     """
     vm.code = []
-    instructions = set(vm.instructions.keys()) - set(exclude)
+    instructions = set(vm.instructions.values()) - set(exclude)
 
     if restrict_to is not None:
         instructions = instructions.intersection(set(restrict_to))
@@ -115,14 +115,15 @@ def randomize(vm,
         r = random.random()
         if r <= instruction_ratio:
             # Generate a random instruction
-            vm.code.append(crianza.lookup(random.choice(instructions)))
+            vm.code.append(random.choice(instructions))
         elif r <= number_string_ratio:
             # Generate a random number
-            vm.code.append(random.randint(*ints))
+            vm.code.append(crianza.compiler.make_embedded_push(random.randint(*ints)))
         else:
             # Generate a random string
-            vm.code.append('"%s"' % "".join(chr(random.randint(*chars))
-                for n in xrange(0, random.randint(*strs))))
+            vm.code.append(crianza.compiler.make_embedded_push('%s' %
+                "".join(chr(random.randint(*chars)) for n in xrange(0,
+                    random.randint(*strs)))))
     return vm
 
 def crossover(m, f):
@@ -134,7 +135,7 @@ def crossover(m, f):
 
 
 class GeneticMachine(crianza.Machine):
-    def __init__(self, code=[]):
+    def __init__(self, code):
         super(GeneticMachine, self).__init__(code)
         self._error = False
 

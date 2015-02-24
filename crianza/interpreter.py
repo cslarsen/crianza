@@ -195,9 +195,13 @@ class Machine(object):
 
     def dispatch(self, op):
         """Executes one operation by dispatching to a function."""
+        # New version where everything, including pushes, are functions
+        # (embedded push):
         #assert(callable(op))
-        #op(self)
-        if callable(op):
-            op(self)
-        else:
-            self.push(op)
+        op(self)
+
+        # Old, stable version
+        #if callable(op):
+        #    op(self)
+        #else:
+        #    self.push(op)

@@ -7,7 +7,6 @@ import crianza
 import crianza.genetic as gp
 import random
 
-
 class DoubleInput(gp.GeneticMachine):
     """A GP machine that produces programs that double their input values.
 
@@ -21,16 +20,18 @@ class DoubleInput(gp.GeneticMachine):
         return DoubleInput(*args, **kw)
 
     def randomize(self, **kw):
-        ops = ["%", "&", "*", "+", "-", "/", "<", "<>", "=", ">", "^", "abs",
-                "and", "bool", "drop", "dup", "false", "if", "int", "negate",
-                "not", "or", "over", "rot", "swap", "true", "|", "~"]
+        ops = map(crianza.instructions.lookup, ["%", "&", "*", "+", "-", "/",
+            "<", "<>", "=", ">", "^", "abs", "and", "bool", "drop", "dup",
+            "false", "if", "int", "negate", "not", "or", "over", "rot", "swap",
+            "true", "|", "~"])
+
         return super(DoubleInput, self).randomize(number_string_ratio=1.0,
                 instruction_ratio=0.75, restrict_to=ops)
 
     def setUp(self):
         self._orig = self.code
         self._input = random.randint(0,100)
-        self.code = [self._input] + self.code
+        self.code = [crianza.compiler.make_embedded_push(self._input)] + self.code
 
     def tearDown(self):
         self.code = self._orig
