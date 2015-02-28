@@ -5,6 +5,21 @@ import parser
 import stack
 import sys
 
+def code_to_string(code):
+    s = []
+    for op in code:
+        if isconstant(op):
+            if isstring(op):
+                s.append(repr(op))
+            else:
+                s.append(str(op))
+        elif compiler.is_embedded_push(op):
+            v = compiler.get_embedded_push_value(op)
+            s.append('"%s"' % repr(v)[1:-1] if isinstance(v, str) else repr(v))
+        else:
+            s.append(str(instructions.lookup(op)))
+    return " ".join(s)
+
 def isstring(args, quoted=False):
     """Checks if value is a (quoted) string."""
     isquoted = lambda c: c[0]==c[-1] and c[0] in ['"', "'"]
@@ -135,18 +150,7 @@ class Machine(object):
     @property
     def code_string(self):
         """Returns code as a parseable string."""
-        s = []
-        for op in self.code:
-            if isconstant(op):
-                if isstring(op):
-                    s.append(repr(op))
-                else:
-                    s.append(str(op))
-            elif compiler.is_embedded_push(op):
-                s.append(str(compiler.get_embedded_push_value(op)))
-            else:
-                s.append(str(instructions.lookup(op)))
-        return " ".join(s)
+        return code_to_string(self.code)
 
     def pop(self):
         """Pops the data stack, returning the value."""

@@ -7,6 +7,7 @@ from repl import repl
 from stack import Stack
 from interpreter import (
     Machine,
+    code_to_string,
     eval,
     execute,
     isbinary,
@@ -27,6 +28,7 @@ __all__ = [
     "ParseError",
     "Stack",
     "check",
+    "code_to_string,"
     "compile",
     "constant_fold",
     "eval",
