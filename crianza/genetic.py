@@ -10,7 +10,7 @@ import crianza
 import random
 import sys
 
-def log(s, stream=sys.stdout):
+def _log(s, stream=sys.stdout):
     stream.write(s)
     stream.flush()
 
@@ -263,6 +263,8 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
 
     if silent:
         log = lambda s,stream=None: None
+    else:
+        log = _log
 
     try:
         iterations = 0
