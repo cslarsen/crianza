@@ -207,8 +207,7 @@ class GeneticMachine(crianza.Machine):
 
 
 def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
-        machines=1000, survival_rate=0.05, mutation_rate=0.075):
-
+        machines=1000, survival_rate=0.05, mutation_rate=0.075, silent=False):
     """Creates a bunch of machines, runs them for a number of steps and then
     gives them a fitness score.  The best produce offspring that are passed on
     to the next generation.
@@ -261,6 +260,9 @@ def iterate(MachineClass, stop_function=lambda iterations: iterations < 10000,
 
     generation = map(make_random, xrange(machines))
     survivors = generation
+
+    if silent:
+        log = lambda s,stream=None: None
 
     try:
         iterations = 0
