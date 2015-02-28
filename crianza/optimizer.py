@@ -103,6 +103,13 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 keep_running = True
                 break
 
+            if a == lookup(instructions.nop):
+                del code[i]
+                if not silent:
+                    print("Optimizer: Removed dead code %s" % a)
+                keep_running = True
+                break
+
             # Dead code removal: <integer> cast_int
             if isinstance(a, int) and b == lookup(instructions.cast_int):
                 del code[i+1]
