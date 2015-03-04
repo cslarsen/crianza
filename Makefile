@@ -21,6 +21,14 @@ test-examples:
 
 check: test test-examples test-genetic
 
+pypi-test:
+	python setup.py register -r pypitest
+	python setup.py sdist upload -r pypitest
+
+pypi-publish:
+	python setup.py register -r pypi
+	python setup.py sdist upload -r pypi
+
 lint:
 	pyflakes \
 		crianza/*.py \
