@@ -2,22 +2,76 @@ Crianza
 -------
 
 Crianza is a very simple program virtual machine with example genetic
-programming applications.
+programming applications.  
 
-It contains the code from the blog post at https://csl.name/post/vm/
+It comes both with a command line program (for running programs and starting a
+REPL) and as a Python module so you can create and run programs from Python.
+The `crianza.genetic` module contains a simple genetic programming framework.
+
+This project originated from a blog post I wrote at https://csl.name/post/vm/
+(it details how you can write your own interpreter from scratch) and is hosted
+on https://github.com/cslarsen/crianza
 
 The VM contains:
 
 -  An interpreter for a Forth-like stack-based language
 -  Some simple peephole optimizations
 -  Simple correctness checking
--  Compilation from source language down to machine language
+-  Compilation from source language down to virtual machine language
 -  Threaded code interpretation
 
 The genetic programming part uses a simple evolutionary approach with
 crossover and weighted Tanimoto coefficients to relate fitness scores.
 
 The project's main goal is to be tutorial and fun.
+
+Installing
+----------
+
+Install from PyPI::
+
+    $ pip install crianza
+
+or from the repository::
+
+    $ git clone https://github.com/cslarsen/crianza.git
+    $ cd crianza
+    $ python setup.py install
+
+Example: Using crianza from the command line
+--------------------------------------------
+
+Just type `crianza -r` or `crianza --repl` to start the interpreter.  In this
+example, we want to calculate `(2+3)*4`::
+
+    $ crianza
+    crianza -r                                                                                                  csl@exome
+    Extra commands for the REPL:
+    .code    - print code
+    .raw     - print raw code
+    .quit    - exit immediately
+    .reset   - reset machine (IP and stacks)
+    .restart - create a clean, new machine
+    .clear   - same as .restart
+    .stack   - print data stack
+
+    > 2 3 + 4 * .
+    Optimizer: Constant-folded 2 3 + to 5
+    Optimizer: Constant-folded 5 4 * to 20
+    20
+    > .code
+    IP: 2
+    DS: []
+    RS: []
+    0000  20 .
+    >
+
+Notice that the optimizer constant-folds the entire expression down to simply
+`20`.  You can see this by printing out the compiled code with the command
+`.code`.  This will list the current instruction pointer `IP`, the contents of
+the data stack `DS`, the return stack `RS` followed by the code.
+
+You can run programs in files as well.  Use `crianza -h` to get options.
 
 Example: Running a simple program from Python
 ---------------------------------------------
