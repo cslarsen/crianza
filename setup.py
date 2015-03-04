@@ -14,7 +14,7 @@ setup(
     download_url="https://github.com/cslarsen/crianza/tarball/0.1",
     scripts=["bin/crianza"],
     license="LICENSE.txt",
-    long_description=open("README.md").read(),
+    long_description=open("README.rst").read(),
     zip_safe=True,
     keywords=["vm", "virtual machine", "genetic programming", "interpreter"],
     classifiers=[],

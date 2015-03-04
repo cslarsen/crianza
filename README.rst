@@ -8,52 +8,61 @@ It contains the code from the blog post at https://csl.name/post/vm/
 
 The VM contains:
 
-  * An interpreter for a Forth-like stack-based language
-  * Some simple peephole optimizations
-  * Simple correctness checking
-  * Compilation from source language down to machine language
-  * Threaded code interpretation
+-  An interpreter for a Forth-like stack-based language
+-  Some simple peephole optimizations
+-  Simple correctness checking
+-  Compilation from source language down to machine language
+-  Threaded code interpretation
 
-The genetic programming part uses a simple evolutionary approach with crossover
-and weighted Tanimoto coefficients to relate fitness scores.
+The genetic programming part uses a simple evolutionary approach with
+crossover and weighted Tanimoto coefficients to relate fitness scores.
 
 The project's main goal is to be tutorial and fun.
-
 
 Example: Running a simple program from Python
 ---------------------------------------------
 
-The simplest way to get started with the language itself is to use the `eval`
-function:
+The simplest way to get started with the language itself is to use the
+``eval`` function:
+
+::
 
     >>> import crianza
     >>> crianza.eval("2 3 + 4 *")
     20
 
-You can also use `crianza.execute` to get the machine used to execute the
-program:
+You can also use ``crianza.execute`` to get the machine used to execute
+the program:
+
+::
 
     >>> crianza.execute("2 3 + 4 *")
     <Machine: ip=1 |ds|=1 |ds|=0 top=20>
 
-This is equivalent of computing `(2 + 3) * 4` and puts the result on top of the
-data stack.  We can get this by doing `crianza.execute(...).top` or just use
-`crianza.eval`.  The language is basically a [dialect of
-Forth](https://en.wikipedia.org/wiki/Forth_(programming_language)).
+This is equivalent of computing ``(2 + 3) * 4`` and puts the result on
+top of the data stack. We can get this by doing
+``crianza.execute(...).top`` or just use ``crianza.eval``. The language
+is basically a `dialect of
+Forth <https://en.wikipedia.org/wiki/Forth_(programming_language)>`_.
 
-The complete machine is returned.  Here it prints the current value of the
-instruction pointer `ip`, the number of items on the data stack (`|ds|`), the
-number of items on the return stack (`|rs|`) and the value on top of the stack.
+The complete machine is returned. Here it prints the current value of
+the instruction pointer ``ip``, the number of items on the data stack
+(``|ds|``), the number of items on the return stack (``|rs|``) and the
+value on top of the stack.
 
-`eval` and `execute` will automatically optimize the code (turn off with the
-option `optimize=False`).  In this case, the entire expression is
-constant-folded down to the result `20`:
+``eval`` and ``execute`` will automatically optimize the code (turn off
+with the option ``optimize=False``). In this case, the entire expression
+is constant-folded down to the result ``20``:
+
+::
 
     >>> m = crianza.execute("2 3 + 4 *")
     >>> m.code
     [20]
 
 You can divert program output to a memory buffer:
+
+::
 
     >>> from StringIO import StringIO
     >>> buffer = StringIO()
@@ -68,6 +77,8 @@ Example: Controlling parsing
 
 The more elaborate way of parsing and running code is:
 
+::
+
     from crianza import *
 
     source = "2 3 + 4 *" # or: (2+3) * 4
@@ -80,16 +91,19 @@ The more elaborate way of parsing and running code is:
 
 You can also do some simple optimizations on the code by specifying:
 
+::
+
     code = compile(source, optimize=True)
 
-In this case, the entire code will be constant-folded to simply 20. The `check`
-function checks for simple errors.
-
+In this case, the entire code will be constant-folded to simply 20. The
+``check`` function checks for simple errors.
 
 Example: Source code with subroutines
 -------------------------------------
 
 Here's code to print the Fibonacci sequence:
+
+::
 
     : println dup . ;
     : next swap over + ;
@@ -103,19 +117,23 @@ Here's code to print the Fibonacci sequence:
 
 You can run it by typing:
 
+::
+
     crianza fibonacci.source | head -20
 
-More examples in the `examples/` folder.
-
+More examples in the ``examples/`` folder.
 
 Example: Genetic programming
 ----------------------------
 
-Crianza also contains very simple genetic programming facilities, just to
-demonstrate a cool usage of the VM.
+Crianza also contains very simple genetic programming facilities, just
+to demonstrate a cool usage of the VM.
 
-You can run the example simulation, which simply attempts to find a program
-that squares input numbers.  For speed, you should run it with `pypy`:
+You can run the example simulation, which simply attempts to find a
+program that squares input numbers. For speed, you should run it with
+``pypy``:
+
+::
 
     $ pypy -OO examples/genetic/square-number.py
     Starting ...
@@ -149,13 +167,16 @@ that squares input numbers.  For speed, you should run it with `pypy`:
 
     The code seems to be correct.
 
-It uses a weighted [Tanimoto coefficient (or Jaccard
-index)](https://en.wikipedia.org/wiki/Jaccard_index#Tanimoto_similarity_and_distance)
-to relate fitness scores among programs, so you can encode any goal. See the
-example files for more information.
+It uses a weighted `Tanimoto coefficient (or Jaccard
+index) <https://en.wikipedia.org/wiki/Jaccard_index#Tanimoto_similarity_and_distance>`_
+to relate fitness scores among programs, so you can encode any goal. See
+the example files for more information.
 
 Here is the main part of the code that instructs Crianza to find a
-`square-number` subroutine (see the file `examples/genetic/square-number.py`).
+``square-number`` subroutine (see the file
+``examples/genetic/square-number.py``).
+
+::
 
     def score(self):
         # Goals, what kind of program we want to evolve ...
@@ -183,26 +204,30 @@ Here is the main part of the code that instructs Crianza to find a
 
 For the above example, the fitness score encodes several goals:
 
-  * The top of the stack `top` should equal the square of the program's input `self._input**2`.
-  * Runtime and compile time errors in the program are penalized (`1000 if self._error else 0`).
-  * The length of the data stack should be exactly one (this makes it easier to embed the resulting code in a subroutine).
-  * The return stack should be zero after program completion.
-  * The code length should be no more than 5 instructions, but as small as possible.
+-  The top of the stack ``top`` should equal the square of the program's
+   input ``self._input**2``.
+-  Runtime and compile time errors in the program are penalized
+   (``1000 if self._error else 0``).
+-  The length of the data stack should be exactly one (this makes it
+   easier to embed the resulting code in a subroutine).
+-  The return stack should be zero after program completion.
+-  The code length should be no more than 5 instructions, but as small
+   as possible.
 
-For the above, it almost always seems to converge. The obvious result for
-calculating the square of a number is `dup *`, and this is what I usually get,
-although I've also gotten fun variants that are almost correct, such as `dup
-abs *`.
+For the above, it almost always seems to converge. The obvious result
+for calculating the square of a number is ``dup *``, and this is what I
+usually get, although I've also gotten fun variants that are almost
+correct, such as ``dup abs *``.
 
 I've not played around much with the GP, but I think it currently does
-crossover quite badly and unintelligently.  It also seems to have problems
-converging on somewhat more advanced programs. But, it's a start, and it's
-definitely a lot of fun!
+crossover quite badly and unintelligently. It also seems to have
+problems converging on somewhat more advanced programs. But, it's a
+start, and it's definitely a lot of fun!
 
 License and author
 ------------------
 
 Copyright (C) 2015 Christian Stigen Larsen
 
-Distributed under the BSD 3-Clause License.  See the LICENSE.txt file for
+Distributed under the BSD 3-Clause License. See the LICENSE.txt file for
 the full text.
