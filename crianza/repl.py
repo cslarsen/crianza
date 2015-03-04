@@ -47,25 +47,32 @@ def repl(optimize=True, persist=True):
     print(".quit    - exit immediately")
     print(".reset   - reset machine (IP and stacks)")
     print(".restart - create a clean, new machine")
+    print(".clear   - same as .restart")
+    print(".stack   - print data stack")
     print("")
 
     machine = Machine([])
+
+    def match(s, *args):
+        return any(map(lambda arg: s.strip()==arg, args))
 
     while True:
         try:
             source = raw_input("> ").strip()
 
             if source[0] == ".":
-                if source == ".quit":
+                if match(source, ".quit"):
                     return
-                elif source == ".code":
+                elif match(source, ".code"):
                     print_code(machine)
-                elif source == ".raw":
+                elif match(source, ".raw"):
                     print(machine.code)
-                elif source == ".reset":
+                elif match(source, ".reset"):
                     machine.reset()
-                elif source == ".restart":
+                elif match(source, ".restart", ".clear"):
                     machine = Machine([])
+                elif match(source, ".stack"):
+                    print(machine.stack)
                 else:
                     raise ParseError("Unknown command: %s" % source)
                 continue
