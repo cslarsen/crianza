@@ -11,7 +11,7 @@ setup(
     author="Christian Stigen Larsen",
     author_email="csl@csl.name",
     url="https://github.com/cslarsen/crianza",
-    download_url="https://github.com/cslarsen/crianza/tarball/0.1",
+    download_url="https://github.com/cslarsen/crianza/tarball/0.1.1",
     scripts=["bin/crianza"],
     license="LICENSE.txt",
     long_description=open("README.rst").read(),
