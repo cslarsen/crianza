@@ -6,7 +6,7 @@ except ImportError:
 setup(
     name="crianza",
     packages=["crianza"],
-    version="0.1.1",
+    version="0.1.2",
     description="Simple Forth-like VM and genetic programming framework.",
     author="Christian Stigen Larsen",
     author_email="csl@csl.name",

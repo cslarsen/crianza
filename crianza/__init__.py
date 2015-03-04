@@ -17,7 +17,11 @@ from interpreter import (
     isstring,
 )
 
-__version__ = "0.1.1"
+__author__ = "Christian Stigen Larsen"
+__copyright__ = "Copyright (C) 2015 Christian Stigen Larsen"
+__email__ = "csl@csl.name"
+__license__ = "BSD 3-Clause"
+__version__ = "0.1.2"
 
 __all__ = [
     "CompileError",
