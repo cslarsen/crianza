@@ -27,7 +27,7 @@ pypi-test:
 
 pypi-publish:
 	python setup.py register -r pypi
-	python setup.py sdist upload -r pypi
+	python setup.py sdist upload --sign -r pypi
 
 lint:
 	pyflakes \
