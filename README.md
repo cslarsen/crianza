@@ -204,5 +204,5 @@ License and author
 
 Copyright (C) 2015 Christian Stigen Larsen
 
-See the LICENSE file for terms.
-
+Distributed under the BSD 3-Clause License.  See the LICENSE.txt file for
+the full text.
