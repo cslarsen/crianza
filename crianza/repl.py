@@ -6,6 +6,32 @@ from parser import parse
 from interpreter import isstring, Machine
 
 
+def print_code(vm, out=sys.stdout, ops_per_line=8, registers=True):
+    """Prints code and state for VM."""
+    if registers:
+        out.write("IP: %d\n" % vm.instruction_pointer)
+        out.write("DS: %s\n" % str(vm.stack))
+        out.write("RS: %s\n" % str(vm.return_stack))
+
+    def to_str(op):
+        if is_embedded_push(op):
+            op = get_embedded_push_value(op)
+
+        if isstring(op):
+            return '"%s"' % repr(op)[1:-1]
+        elif callable(op):
+            return vm.lookup(op)
+        else:
+            return str(op)
+
+    for addr, op in enumerate(vm.code):
+        if (addr % ops_per_line) == 0 and (addr==0 or (addr+1) < len(vm.code)):
+            if addr > 0:
+                out.write("\n")
+            out.write("%0*d  " % (max(4, len(str(len(vm.code)))), addr))
+        out.write("%s " % to_str(op))
+    out.write("\n")
+
 def repl(optimize=True, persist=True):
     """Starts a simple REPL for this machine.
 
@@ -15,32 +41,6 @@ def repl(optimize=True, persist=True):
 
         persist: If True, the machine is not deleted after each line.
     """
-
-    def print_code(vm, ops_per_line=8):
-        """Prints code and state for VM."""
-        print("IP: %d" % vm.instruction_pointer)
-        print("DS: %s" % str(vm.stack))
-        print("RS: %s" % str(vm.return_stack))
-
-        def to_str(op):
-            if is_embedded_push(op):
-                op = get_embedded_push_value(op)
-
-            if isstring(op):
-                return repr(op)[1:-1]
-            elif callable(op):
-                return vm.lookup(op)
-            else:
-                return str(op)
-
-        for addr, op in enumerate(vm.code):
-            if (addr % ops_per_line) == 0 and (addr+1) < len(vm.code):
-                if addr > 0:
-                    sys.stdout.write("\n")
-                sys.stdout.write("%0*d  " % (max(4, len(str(len(vm.code)))), addr))
-            sys.stdout.write("%s " % to_str(op))
-        sys.stdout.write("\n")
-
     print("Extra commands for the REPL:")
     print(".code    - print code")
     print(".raw     - print raw code")

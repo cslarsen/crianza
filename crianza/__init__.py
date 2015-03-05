@@ -3,7 +3,7 @@ from errors import CompileError, MachineError, ParseError
 from instructions import lookup
 from optimizer import constant_fold, optimized
 from parser import (parse, parse_stream)
-from repl import repl
+from repl import repl, print_code
 from stack import Stack
 from interpreter import (
     Machine,
