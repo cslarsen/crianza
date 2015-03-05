@@ -1,1 +1,5 @@
-include *.rst
+include README.rst
+include LICENSE.txt
+include TODO
+graft tests
+graft examples
