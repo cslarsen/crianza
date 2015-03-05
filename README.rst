@@ -1,12 +1,13 @@
+
 Crianza
 -------
 
 Crianza is a very simple program virtual machine with example genetic
-programming applications.  
+programming applications.
 
 It comes both with a command line program (for running programs and starting a
 REPL) and as a Python module so you can create and run programs from Python.
-The `crianza.genetic` module contains a simple genetic programming framework.
+The ``crianza.genetic`` module contains a simple genetic programming framework.
 
 This project originated from a blog post I wrote at https://csl.name/post/vm/
 (it details how you can write your own interpreter from scratch) and is hosted
@@ -42,11 +43,10 @@ or from the repository::
 Example: Using crianza from the command line
 --------------------------------------------
 
-Just type `crianza -r` or `crianza --repl` to start the interpreter.  In this
-example, we want to calculate `(2+3)*4`::
+Just type ``crianza -r`` or ``crianza --repl`` to start the interpreter.  In
+this example, we want to calculate ``(2+3)*4``::
 
-    $ crianza
-    crianza -r                                                                                                  csl@exome
+    $ crianza -r
     Extra commands for the REPL:
     .code    - print code
     .raw     - print raw code
@@ -68,11 +68,12 @@ example, we want to calculate `(2+3)*4`::
     >
 
 Notice that the optimizer constant-folds the entire expression down to simply
-`20`.  You can see this by printing out the compiled code with the command
-`.code`.  This will list the current instruction pointer `IP`, the contents of
-the data stack `DS`, the return stack `RS` followed by the code.
+``20``.  You can see this by printing out the compiled code with the command
+``.code``.  This will list the current instruction pointer ``IP``, the number
+of items on the data stack ``DS`` and the return stack ``RS`` followed by the
+code.
 
-You can run programs in files as well.  Use `crianza -h` to get options.
+You can run programs in files as well.  Use ``crianza -h`` to get options.
 
 Example: Running a simple program from Python
 ---------------------------------------------
