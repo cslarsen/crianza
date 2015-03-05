@@ -10,7 +10,7 @@ repl:
 	@$(PYTHONPATH) bin/crianza --repl
 
 test:
-	$(PYTHON) tests/test.py -v
+	$(PYTHON) tests/crianza_test.py -v
 
 test-genetic:
 	$(PYTHON) examples/genetic/double-number.py
@@ -21,11 +21,14 @@ test-examples:
 
 check: test test-examples test-genetic
 
-pypi-test:
+setup-test:
+	python setup.py test
+
+setup-pypi-test:
 	python setup.py register -r pypitest
 	python setup.py sdist upload -r pypitest
 
-pypi-publish:
+setup-pypi-publish:
 	python setup.py register -r pypi
 	python setup.py sdist upload --sign -r pypi
 

@@ -20,7 +20,7 @@ fibonacci_source = \
 @ next println return
 """
 
-class TestVM(unittest.TestCase):
+class TestCrianza(unittest.TestCase):
     def test_initial_conditions(self):
         machine = crianza.Machine([])
         machine.run()

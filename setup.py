@@ -16,6 +16,7 @@ setup(
     license="http://opensource.org/licenses/BSD-3-Clause",
     long_description=open("README.rst").read(),
     zip_safe=True,
+    test_suite="tests",
 
     keywords=["vm", "virtual machine", "genetic programming", "interpreter",
         "forth", "programming", "code", "bytecode", "assembler", "native",
