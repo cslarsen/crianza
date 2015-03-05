@@ -60,7 +60,7 @@ def repl(optimize=True, persist=True):
         try:
             source = raw_input("> ").strip()
 
-            if source[0] == ".":
+            if source[0] == "." and len(source) > 1:
                 if match(source, ".quit"):
                     return
                 elif match(source, ".code"):

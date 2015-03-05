@@ -58,8 +58,6 @@ def constant_fold(code, silent=True, ignore_errors=True):
             b = code[i+1] if i+1 < len(code) else None
             c = code[i+2] if i+2 < len(code) else None
 
-            #print("-- a=%s b=%s c=%s lookup=%s" % (a,b,c,lookup(c)))
-
             # Constant fold arithmetic operations (TODO: Move to check-func)
             if interpreter.isnumber(a, b) and c in arithmetic:
                 # Although we can detect division by zero at compile time, we
@@ -82,7 +80,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
                 code.insert(i, result)
 
                 if not silent:
-                    print("Optimizer: Constant-folded %d %d %s to %d" % (a,b,c,result))
+                    print("Optimizer: Constant-folded %s %s %s to %s" % (a,b,c,result))
 
                 keep_running = True
                 break
@@ -112,6 +110,14 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
             # Dead code removal: <integer> cast_int
             if isinstance(a, int) and b == lookup(instructions.cast_int):
+                del code[i+1]
+                if not silent:
+                    print("Optimizer: Translated %s %s to %s" % (a,b,a))
+                keep_running = True
+                break
+
+            # Dead code removal: <float> cast_float
+            if isinstance(a, float) and b == lookup(instructions.cast_float):
                 del code[i+1]
                 if not silent:
                     print("Optimizer: Translated %s %s to %s" % (a,b,a))
@@ -169,7 +175,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
             if isconstant(a) and b == lookup(instructions.cast_str):
                 del code[i:i+2]
-                code.insert(i, str(a))
+                code.insert(i, str(a)) # TODO: Try-except here
                 if not silent:
                     print("Optimizer: Translated %s %s to %s" % (a, b, str(a)))
                 keep_running = True
@@ -177,9 +183,21 @@ def constant_fold(code, silent=True, ignore_errors=True):
 
             if isconstant(a) and b == lookup(instructions.cast_bool):
                 del code[i:i+2]
-                code.insert(i, bool(a))
+                code.insert(i, bool(a)) # TODO: Try-except here
                 if not silent:
                     print("Optimizer: Translated %s %s to %s" % (a, b, bool(a)))
                 keep_running = True
                 break
+
+            if isconstant(a) and b == lookup(instructions.cast_float):
+                try:
+                    v = float(a)
+                    del code[i:i+2]
+                    code.insert(i, v)
+                    if not silent:
+                        print("Optimizer: Translated %s %s to %s" % (a, b, v))
+                    keep_running = True
+                    break
+                except ValueError:
+                    pass
     return code

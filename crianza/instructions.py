@@ -146,6 +146,13 @@ def read(vm):
     if line == "":
         raise EOFError()
 
+def cast_float(vm):
+    try:
+        float(vm.top)
+    except ValueError:
+        raise errors.MachineError("Cannot be cast to float: '%s'" %
+                str(vm.top))
+
 def cast_int(vm):
     try:
         int(vm.top)
@@ -312,6 +319,7 @@ default_instructions = {
     "dup":    dup,
     "exit":   exit,
     "false":  false_,
+    "float":  cast_float,
     "if":     if_stmt,
     "int":    cast_int,
     "jmp":    jmp,

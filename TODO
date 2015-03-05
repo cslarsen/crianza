@@ -1,13 +1,53 @@
+- vm: store program as list of native types, not list of strings
+- vm: allow floats
+- vm: fixnum arithmetic (as option)
+
+- parser: allow negative numbers, "-123" parses as "-" "123"
+- parser: make it possible to refer to source code locations on compile errors (just
+    create a list with source locations for each op, line column; better yet,
+    before compiling to native types, store ops in ((file,line,column), op))
+
+- optimizer: optimized() should work on native types
+
+- genetic: crossover subregions, not from start to end
+- genetic: higher score to programs that terminate within steps
 - genetic: keep the all-time best candidates somewhere; I tried printing them,
   and they seem to converge pretty fast. Also stop should not necessarily be on
   the average, only the very few best. Also, the score function should give
   more score to correctness, i.e. given a normally good score, a correctness
   test (func(input)==expected output) should give dramatically higher scores.
-- make it possible to refer to source code locations on compile errors (just
-    create a list with source locations for each op)
-- vm: store program as list of native types, not list of strings
-- vm: allow floats
-- parser: allow negative numbers, "-123" parses as "-" "123"
-- vm: fixnum arithmetic (as option)
-- genetic: crossover subregions, not from start to end
-- genetic: higher score to programs that terminate within steps
+
+Tokenizer errors:
+- cannot do: "\"" to print "
+- see if tokenizer is able to actually distinguish various tokens that are not
+space separated (in most cases this is not needed). E.g. this is valid forth:
+"--1" and returns 1 (why I don't know), but that's just an example.
+- compiler: take tokentype, position, ... tuple and use that to display errors
+- compiler: extract locations in a list, when optimizer deletes code, also
+delete from this list
+
+compiler considerations:
+- should jumps be relative?
+- should look into how JVM clears the stack so that it can easily put
+subroutine stack cells in registers.
+- add debug symbols, i.e. add subroutine/word names in a list and their
+location in the final compiled code, so that they can be inspected. Should also
+be possible to redefine commands. We don't follow the traditional forth
+scheme very closely here, because I think it doesn't precompile user defined
+words.
+- look through all the parser code, detect bad code like
+    : square dup
+      : oops, this should have been a semicolon
+  etc.
+
+- be able to get command line arguments
+- better looping structs, see how forth does it
+- fix column numbers
+
+code_string:
+- if string contains the "-char, then the quoting is wrong, e.g.
+  code string for the string '"hey' will be ""hey".
+- find out if we want to be able to use both " and ' for quoting strings.
+
+- add full escape seqs, includ "\x2A" and "\o23", see
+https://docs.python.org/2.0/ref/strings.html

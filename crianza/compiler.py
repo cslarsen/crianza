@@ -70,8 +70,8 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
 
     A program such as:
 
-        :sub1 <sub1 code ...> ;
-        :sub2 <sub2 code ...> ;
+        : sub1 <sub1 code ...> ;
+        : sub2 <sub2 code ...> ;
         sub1 foo sub2 bar
 
     is compiled into:
@@ -115,6 +115,7 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
     subroutine = {}
     builtins = Machine([]).instructions
 
+    # Gather up subroutines
     try:
         it = code.__iter__()
         while True:
@@ -212,5 +213,8 @@ def native_types(code):
             # Python functions, for fast dispatching:
             out.append(make_embedded_push(v))
         else:
-            out.append(instructions.lookup(c))
+            try:
+                out.append(instructions.lookup(c))
+            except KeyError, e:
+                raise CompileError("Unknown word: %s" % c)
     return out

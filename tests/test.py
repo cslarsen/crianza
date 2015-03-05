@@ -43,7 +43,7 @@ class TestVM(unittest.TestCase):
         test("1 2", [1, 2])
         test("123 dup * .", [123, "dup", "*", "."])
         test("1 2 3 4 5 * * * *", [1, 2, 3, 4, 5, "*", "*", "*", "*"])
-        test(":square\n\tdup * ;\n\n12 square .\n", [":", "square", "dup", "*",
+        test(": square\n\tdup * ;\n\n12 square .\n", [":", "square", "dup", "*",
             ";", 12, "square", "."])
 
     def _test_arithmetic(self, a, b, op):

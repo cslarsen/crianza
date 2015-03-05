@@ -19,6 +19,7 @@ The VM contains:
 -  Simple correctness checking
 -  Compilation from source language down to virtual machine language
 -  Threaded code interpretation
+-  Data types: Integers, floats, booleans and strings.
 
 The genetic programming part uses a simple evolutionary approach with
 crossover and weighted Tanimoto coefficients to relate fitness scores.
