@@ -1,7 +1,5 @@
-from errors import ParseError
 from tokenizer import Tokenizer
 import StringIO
-import string
 
 
 def parse(source):

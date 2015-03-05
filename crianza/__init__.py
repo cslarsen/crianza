@@ -26,13 +26,12 @@ __version__ = "0.1.5"
 __all__ = [
     "CompileError",
     "Instruction",
-    "Instruction",
     "Machine",
     "MachineError",
     "ParseError",
     "Stack",
     "check",
-    "code_to_string,"
+    "code_to_string",
     "compile",
     "constant_fold",
     "eval",
@@ -46,5 +45,6 @@ __all__ = [
     "optimized",
     "parse",
     "parse_stream",
+    "print_code",
     "repl",
 ]
