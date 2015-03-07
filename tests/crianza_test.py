@@ -1,4 +1,8 @@
-import StringIO
+try:
+    import StringIO
+except ImportError:
+    from io import StringIO
+
 import crianza
 import operator
 import random
