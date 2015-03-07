@@ -24,13 +24,10 @@ check: test test-examples test-genetic
 setup-test:
 	python setup.py test
 
-setup-pypi-test:
-	python setup.py register -r pypitest
-	python setup.py sdist upload -r pypitest
-
-setup-pypi-publish:
-	python setup.py register -r pypi
-	python setup.py sdist upload --sign -r pypi
+publish:
+	python setup.py bdist_wheel
+	gpg --detach-sign -a dist/*.whl
+	twine upload dist/*
 
 lint:
 	pyflakes \
