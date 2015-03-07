@@ -172,7 +172,7 @@ def cast_bool(vm):
 def cast_str(vm):
     try:
         vm.push(str(vm.pop()))
-    except ValueError, e:
+    except ValueError as e:
         raise errors.MachineError(e)
 
 def equal(vm):

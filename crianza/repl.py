@@ -88,9 +88,9 @@ def repl(optimize=True, persist=True):
             return
         except KeyboardInterrupt:
             return
-        except ParseError, e:
-            print("Parser error: %s" % e)
-        except MachineError, e:
+        except ParseError as e:
+            print("Parse error: %s" % e)
+        except MachineError as e:
             print("Machine error: %s" % e)
-        except CompileError, e:
+        except CompileError as e:
             print("Compile error: %s" % e)

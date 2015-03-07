@@ -42,7 +42,7 @@ def check(code):
         if not isconstant(a):
             try:
                 instructions.lookup(a)
-            except KeyError, err:
+            except KeyError as err:
                 # Skip embedded push closures
                 if not (len(err.args)==1 and is_embedded_push(err.args[0])):
                     raise CompileError("Instruction at index %d is unknown: %s"

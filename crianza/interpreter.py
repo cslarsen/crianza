@@ -156,7 +156,7 @@ class Machine(object):
         """Pops the data stack, returning the value."""
         try:
             return self.data_stack.pop()
-        except errors.MachineError, e:
+        except errors.MachineError as e:
             raise errors.MachineError("%s: At index %d in code: %s" %
                     (e, self.instruction_pointer, self.code_string))
 
