@@ -1,13 +1,13 @@
-PYTHONPATH := PYTHONPATH=.:$$PYTHONPATH
-CRIANZA := $(PYTHONPATH) bin/crianza
+PYPATH := PYTHONPATH=.:$$PYTHONPATH
+CRIANZA := $(PYPATH) bin/crianza
 
 # Tip: Try changing "python" to "pypy"
-PYTHON := $(PYTHONPATH) python
+PYTHON := $(PYPATH) python
 
 default: test
 
 repl:
-	@$(PYTHONPATH) bin/crianza --repl
+	@$(PYPATH) bin/crianza --repl
 
 test:
 	$(PYTHON) tests/crianza_test.py -v
