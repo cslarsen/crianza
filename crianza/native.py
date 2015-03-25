@@ -24,7 +24,11 @@ def sub():
 
 def dot():
     # TODO: Use current output stream
-    return [(bp.PRINT_ITEM, None)]
+    return [
+        (bp.PRINT_ITEM, None),
+        (bp.LOAD_CONST, "\n"),
+        (bp.PRINT_ITEM, None),
+    ]
 
 def div():
     return [(bp.BINARY_DIVIDE, None)]
@@ -41,8 +45,7 @@ def equal():
 def greater():
     return [(bp.COMPARE_OP, ">")]
 
-def at():#lineno):
-    raise NotImplementedError("at")
+def at(lineno):
     return [(bp.LOAD_CONST, lineno)]
 
 def bitwise_or():
@@ -76,6 +79,8 @@ def cast_bool():
     return __call_function("bool")
 
 def call():
+    # TODO: Could use JUMP_ABSOLUTE, but we'd have to calculate some offsets
+    # due to input arguments.
     raise NotImplementedError("call")
 
 def drop():
@@ -143,7 +148,10 @@ def true_():
     return [(bp.LOAD_CONST, True)]
 
 def write():
-    raise NotImplementedError("write")
+    # TODO: Use current output stream
+    return [
+        (bp.PRINT_ITEM, None),
+    ]
 
 def bitwise_or():
     return [(bp.BINARY_OR, None)]
@@ -154,26 +162,38 @@ def bitwise_complement():
 def push(constant):
     return [(bp.LOAD_CONST, constant)]
 
-def to_code(bytecode):
+def to_code(bytecode, firstlineno=1):
+    # TODO: Accept completely compiled code (a VM perhaps), with streams etc.
     code = []
+    lineno = firstlineno
 
     for op in bytecode:
         if isinstance(op, int):
             code += push(op)
+        elif op == "@":
+            code += instructions[op](lineno)
         else:
             code += instructions[op]()
+        lineno += 1
 
     return code
 
-def compile(bytecode, freevars=[], args=(), varargs=False, varkwargs=False,
-        newlocals=True, name="", filename="", firstlineno=1, docstring=""):
+def compile(code, args=0, arglist=(), freevars=[], varargs=False,
+        varkwargs=False, newlocals=True, name="", filename="", firstlineno=1,
+        docstring=""):
 
-    code = to_code(bytecode)
+    code = to_code(code, firstlineno)
     code.append((bp.RETURN_VALUE, None))
 
-    codeobj = bp.Code(code, freevars=[], args=(), varargs=False,
-            varkwargs=False, newlocals=True, name="", filename="",
-            firstlineno=1, docstring="")
+    if args > 0:
+        for n in xrange(args):
+            name = "arg%d" % n
+            arglist = arglist + (name,)
+            code = [(bp.LOAD_FAST, name)] + code
+
+    codeobj = bp.Code(code, freevars=freevars, args=arglist, varargs=varargs,
+            varkwargs=varkwargs, newlocals=newlocals, name=name,
+            filename=filename, firstlineno=firstlineno, docstring=docstring)
 
     func = lambda: None
     func.func_code = bp.Code.to_code(codeobj)
@@ -220,3 +240,20 @@ instructions = {
     "|":      bitwise_or,
     "~":      bitwise_complement,
 }
+
+if __name__ == "__main__":
+    # A simple test; remove this later.
+    import dis
+    import random
+
+    mul2 = compile([2,"*"], args=1, name="mul2",
+            docstring="Multiplies number with two.")
+
+    for __ in range(10):
+        n = random.randint(-100, 100)
+        result = "OK" if mul2(n) == n*2 else "FAIL"
+        print("%-4s mul2(%d) ==> %d" % (result, n, mul2(n)))
+        assert mul2(n) == n*2, "Error in function mul2"
+
+    print("Code for mul2:")
+    dis.dis(mul2)
