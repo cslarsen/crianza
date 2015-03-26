@@ -9,3 +9,7 @@ class ParseError(Exception):
 class CompileError(Exception):
     """An error ocurring during compilation."""
     pass
+
+class ExitProgram(Exception):
+    """Used to signal that we want to exit the program."""
+    pass

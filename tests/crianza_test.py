@@ -9,6 +9,12 @@ import random
 import sys
 import unittest
 
+try:
+    import crianza.native
+    CRIANZA_NATIVE = True
+except ImportError:
+    CRIANZA_NATIVE = False
+
 fibonacci_source = \
 """
 # The Fibonacci Sequence
@@ -184,6 +190,24 @@ class TestCrianza(unittest.TestCase):
         self.assertEqual(m.top, 377)
         self.assertEqual(m.stack, [233, 377])
         self.assertEqual(m.return_stack, crianza.Stack([6]))
+
+
+class TestCrianzaNative(unittest.TestCase):
+    @unittest.skipUnless(CRIANZA_NATIVE, "crianza.native unsupported")
+    def test_mul2(self):
+        mul2 = crianza.native.compile([2,"*"], args=1, name="mul2",
+                docstring="Multiplies number with two.")
+
+        self.assertIsNotNone(mul2)
+        self.assertEqual(mul2.__doc__, "Multiplies number with two.")
+        self.assertEqual(mul2.__name__, "mul2")
+
+        for n in xrange(100):
+            self.assertEqual(n*2, mul2(n))
+
+        for __ in range(10):
+            n = random.randint(-1000000, 1000000)
+            self.assertEqual(n*2, mul2(n))
 
 
 if __name__ == "__main__":

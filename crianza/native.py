@@ -62,18 +62,7 @@ def __call_function(name):
     ]
 
 def abs_():
-    # We'll just call abs():
-    #
-    #   >>> import dis
-    #   >>> dis.dis(lambda n: abs(n))
-    #     1           0 LOAD_GLOBAL              0 (abs)
-    #                 3 LOAD_FAST                0 (n)
-    #                 6 CALL_FUNCTION            1
-    #                 9 RETURN_VALUE             n
     return __call_function("abs")
-
-def binary_and():
-    raise NotImplementedError("binary_and")
 
 def cast_bool():
     return __call_function("bool")
@@ -83,6 +72,9 @@ def call():
     # due to input arguments.
     raise NotImplementedError("call")
 
+def return_():
+    raise NotImplementedError("return")
+
 def drop():
     return [(bp.POP_TOP, None)]
 
@@ -90,8 +82,8 @@ def dup():
     return [(bp.DUP_TOP, None)]
 
 def exit():
-    # TODO: Can be done by raising a specific exception, for instance.
-    raise NotImplementedError("exit")
+    # Return the value on top of the stack to the caller
+    return [(bp.RETURN_VALUE)]
 
 def false_():
     return [(bp.LOAD_CONST, False)]
@@ -99,8 +91,13 @@ def false_():
 def cast_float():
     return __call_function("float")
 
-def if_stmt():
-    raise NotImplementedError("if")
+def if_stmt(lineno):
+    # Stack: false_clause true_clause test
+    return [
+        (bp.JUMP_IF_FALSE, lineno+3+3), # if false, pop top
+        (bp.ROT_TWO, None), # if true, rotate before popping
+        (bp.POP_TOP, None),
+    ]
 
 def cast_int():
     return __call_function("int")
@@ -115,11 +112,22 @@ def negate():
 def nop():
     return [(bp.NOP, None)]
 
+def binary_and(lineno):
+    # Stack: a b
+    return [
+        (bp.JUMP_IF_FALSE_OR_POP, lineno+2*3),
+        (bp.JUMP_RELATIVE, 3*3),
+        (bp.ROT_TWO, None),
+        (bp.POP_TOP, None),
+    ]
+
 def binary_not():
     # TODO: Rename our "binary_not" to "unary_not"
+    # TODO: This is correct, it evaluates "not a"
     return [(bp.UNARY_NOT, None)]
 
 def binary_or():
+    # TODO: This is wrong, this is a bitwise op and nor "a or b"
     return [(bp.BINARY_OR, None)]
 
 def over():
@@ -130,10 +138,15 @@ def over():
     ]
 
 def read():
-    raise NotImplementedError("read")
-
-def return_():
-    raise NotImplementedError("return")
+    # TODO: Use current input stream
+    return [
+        (bp.LOAD_GLOBAL, "sys"),
+        (bp.LOAD_ATTR, "stdin"),
+        (bp.LOAD_ATTR, "readline"),
+        (bp.CALL_FUNCTION, None),
+        (bp.LOAD_ATTR, "rstrip"),
+        (bp.CALL_FUNCTION, None),
+    ]
 
 def rot():
     return [(bp.ROT_THREE, None)]
@@ -187,9 +200,9 @@ def compile(code, args=0, arglist=(), freevars=[], varargs=False,
 
     if args > 0:
         for n in xrange(args):
-            name = "arg%d" % n
-            arglist = arglist + (name,)
-            code = [(bp.LOAD_FAST, name)] + code
+            argname = "arg%d" % n
+            arglist = arglist + (argname,)
+            code = [(bp.LOAD_FAST, argname)] + code
 
     codeobj = bp.Code(code, freevars=freevars, args=arglist, varargs=varargs,
             varkwargs=varkwargs, newlocals=newlocals, name=name,
@@ -197,6 +210,8 @@ def compile(code, args=0, arglist=(), freevars=[], varargs=False,
 
     func = lambda: None
     func.func_code = bp.Code.to_code(codeobj)
+    func.__doc__ = docstring # TODO: I thought bp.Code was supposed to do this?
+    func.__name__ = name # TODO: Ditto
     return func
 
 instructions = {
