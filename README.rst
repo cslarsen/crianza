@@ -307,7 +307,7 @@ To test it, you can do::
                   6 BINARY_MULTIPLY
                   7 RETURN_VALUE
 
-The ``crianza.native.compile`` function takes in source code and ``args``, the
+The ``crianza.native.xcompile`` function takes in source code and ``args``, the
 number of arguments the resulting Python function will take.  In the above
 example, we create a function that multiplies its *single* argument by two, so
 we set ``args=1``.  This is *exactly* the same as doing::
