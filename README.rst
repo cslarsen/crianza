@@ -287,8 +287,9 @@ Native Python bytecode compiler
 Crianza also includes a work-in-progress native CPython bytecode compiler. It's
 currently incomplete, with correct support of only simple instructions.
 
-Furthermore, it uses the BytePlay package, which works for Python 2.x only.  In
-time, I plan to support all instructions and the Python 3.x series.
+Furthermore, it uses the `byteplay module
+<https://pypi.python.org/pypi/byteplay/0.2>`_, which works for Python 2.x only.
+In time, I plan to support all instructions and the Python 3.x series.
 
 To test it, you can do::
 
