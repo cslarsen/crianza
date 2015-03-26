@@ -296,10 +296,8 @@ In time, I plan to support all instructions and the Python 3.x series.
 
 To test it, you can do::
 
-    >>> import crianza
     >>> import crianza.native
-    >>> code = crianza.compile(crianza.parse("2 *"))
-    >>> mul2 = crianza.native.compile(code, args=1)
+    >>> mul2 = crianza.native.xcompile("2 *", args=1)
     >>> mul2(101)
     202
     >>> import dis
