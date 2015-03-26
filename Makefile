@@ -29,6 +29,9 @@ publish:
 	gpg --detach-sign -a dist/*.whl
 	twine upload dist/*
 
+tox:
+	unset PYTHONPATH && tox
+
 lint:
 	pyflakes \
 		crianza/*.py \

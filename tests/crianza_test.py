@@ -195,7 +195,8 @@ class TestCrianza(unittest.TestCase):
 class TestCrianzaNative(unittest.TestCase):
     @unittest.skipUnless(CRIANZA_NATIVE, "crianza.native unsupported")
     def test_mul2(self):
-        mul2 = crianza.native.compile([2,"*"], args=1, name="mul2",
+        code = crianza.compile(crianza.parse("2 *"))
+        mul2 = crianza.native.compile(code, args=1, name="mul2",
                 docstring="Multiplies number with two.")
 
         self.assertIsNotNone(mul2)

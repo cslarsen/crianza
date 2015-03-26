@@ -296,8 +296,10 @@ In time, I plan to support all instructions and the Python 3.x series.
 
 To test it, you can do::
 
+    >>> import crianza
     >>> import crianza.native
-    >>> mul2 = crianza.native.compile([2, "*"], args=1)
+    >>> code = crianza.compile(crianza.parse("2 *"))
+    >>> mul2 = crianza.native.compile(code, args=1)
     >>> mul2(101)
     202
     >>> import dis
@@ -309,8 +311,8 @@ To test it, you can do::
 
 The ``crianza.native.compile`` function takes in source code and ``args``, the
 number of arguments the resulting Python function will take.  In the above
-example, we create a function that multiplies its single argument by two, so we
-set ``code=[2, "*"]`` and ``args=1``.  This is *exactly* the same as doing::
+example, we create a function that multiplies its *single* argument by two, so
+we set ``args=1``.  This is *exactly* the same as doing::
 
     >>> py_mul2 = lambda n: n*2
     >>> dis.dis(py_mul2)
@@ -333,9 +335,9 @@ and equivalently::
     >>> py_mul2("hello")
     'hellohello'
 
-Again, note that the compiler is currently *very* buggy. In particular, it
-doesn't correctly implement branching (jumps, if-statements, etc.) and doesn't
-have support for strings.
+Again, note that this compiler is currently *very* buggy. In particular, it
+doesn't correctly implement branching (jumps, if-statements, etc.) and many
+other things.
 
 License and author
 ------------------
