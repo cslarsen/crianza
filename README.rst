@@ -20,7 +20,8 @@ The VM contains:
 -  Simple correctness checking
 -  Compilation from source language down to virtual machine language
 -  Threaded code interpretation
--  Data types: Integers, floats, booleans and strings.
+-  Data types: Integers, floats, booleans and strings
+-  An experimental, in-progress compiler to native Python bytecode
 
 The genetic programming part uses a simple evolutionary approach with
 crossover and weighted Tanimoto coefficients to relate fitness scores.
@@ -279,6 +280,59 @@ I've not played around much with the GP, but I think it currently does
 crossover quite badly and unintelligently. It also seems to have
 problems converging on somewhat more advanced programs. But, it's a
 start, and it's definitely a lot of fun!
+
+Python native bytecode compiler
+-------------------------------
+
+Crianza also includes a work-in-progress native CPython bytecode compiler. It's
+currently incomplete, with correct support of only simple instructions.
+
+Furthermore, it uses the BytePlay package, which works for Python 2.x only.  In
+time, I plan to support all instructions and the Python 3.x series.
+
+To test it, you can do::
+
+    >>> import crianza.native
+    >>> mul2 = crianza.native.compile([2, "*"], args=1)
+    >>> mul2(101)
+    202
+    >>> import dis
+    >>> dis.dis(mul2)
+      1           0 LOAD_FAST                0 (arg0)
+                  3 LOAD_CONST               1 (2)
+                  6 BINARY_MULTIPLY
+                  7 RETURN_VALUE
+
+The ``crianza.native.compile`` function takes in source code and ``args``, the
+number of arguments the resulting Python function will take.  In the above
+example, we create a function that multiplies arguments by two, hence
+``args=1``.  This is _exactly_ the same as doing::
+
+    >>> py_mul2 = lambda n: n*2
+    >>> dis.dis(py_mul2)
+      1           0 LOAD_FAST                0 (n)
+                  3 LOAD_CONST               1 (2)
+                  6 BINARY_MULTIPLY
+                  7 RETURN_VALUE
+
+In fact, the Python bytecode for the two functions are exactly the same, sans
+the local argument name.
+
+Because the CPython bytecode also operates on Python types, it naturally
+supports things like multiplying sequences::
+
+    >>> mul2("hello")
+    'hellohello'
+
+and equivalently,
+
+::
+    >>> py_mul2("hello")
+    'hellohello'
+
+Again, note that the compiler is currently *very* buggy. In particular, it
+doesn't correctly implement branching (jumps, if-statements, etc.) and doesn't
+have support for strings.
 
 License and author
 ------------------
