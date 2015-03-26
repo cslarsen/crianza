@@ -309,8 +309,8 @@ To test it, you can do::
 
 The ``crianza.native.compile`` function takes in source code and ``args``, the
 number of arguments the resulting Python function will take.  In the above
-example, we create a function that multiplies its single argument by two,
-``args=1``.  This is *exactly* the same as doing::
+example, we create a function that multiplies its single argument by two, so we
+set ``code=[2, "*"]`` and ``args=1``.  This is *exactly* the same as doing::
 
     >>> py_mul2 = lambda n: n*2
     >>> dis.dis(py_mul2)
