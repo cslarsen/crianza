@@ -328,9 +328,8 @@ supports things like multiplying sequences::
     >>> mul2("hello")
     'hellohello'
 
-and equivalently,
+and equivalently::
 
-::
     >>> py_mul2("hello")
     'hellohello'
 
