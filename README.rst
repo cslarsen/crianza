@@ -285,8 +285,10 @@ Native Python bytecode compiler
 -------------------------------
 
 Crianza also contains ``crianza.native``, an experimental, work-in-progress
-compiler to native CPython bytecode. At the moment, it only correctly
-implements simple instructions and doesn't do any optimizations.
+compiler to native `CPython bytecode
+<https://docs.python.org/2/library/dis.html#python-bytecode-instructions>`_. At
+the moment, it only correctly implements simple instructions and doesn't do any
+optimizations.
 
 Furthermore, it uses the `byteplay module
 <https://pypi.python.org/pypi/byteplay/0.2>`_, which works for Python 2.x only.
