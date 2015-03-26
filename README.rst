@@ -281,7 +281,7 @@ crossover quite badly and unintelligently. It also seems to have
 problems converging on somewhat more advanced programs. But, it's a
 start, and it's definitely a lot of fun!
 
-Python native bytecode compiler
+Native Python bytecode compiler
 -------------------------------
 
 Crianza also includes a work-in-progress native CPython bytecode compiler. It's
