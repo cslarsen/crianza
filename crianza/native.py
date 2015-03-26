@@ -6,6 +6,7 @@ the interpreter!
 """
 
 import byteplay as bp
+import crianza
 import crianza.compiler as cc
 import crianza.instructions as cr
 
@@ -29,8 +30,7 @@ def dot(lineno):
     # TODO: Use current output stream
     return [
         (bp.PRINT_ITEM, None),
-        (bp.LOAD_CONST, "\n"),
-        (bp.PRINT_ITEM, None),
+        (bp.PRINT_NEWLINE, None),
     ]
 
 def div(lineno):
@@ -56,8 +56,7 @@ def bitwise_xor(lineno):
 
 def __call_function(name):
     return [
-        (bp.LOAD_GLOBAL, name), # -- n name
-        (bp.ROT_TWO, None),     # -- name n
+        (bp.LOAD_GLOBAL, name),
         (bp.CALL_FUNCTION, None)
     ]
 
@@ -82,8 +81,11 @@ def dup(lineno):
     return [(bp.DUP_TOP, None)]
 
 def exit(lineno):
-    # Return the value on top of the stack to the caller
-    return [(bp.RETURN_VALUE)]
+    # Returns None to Python
+    return [
+        (bp.LOAD_CONST, None),
+        (bp.RETURN_VALUE, None),
+    ]
 
 def false_(lineno):
     return [(bp.LOAD_CONST, False)]
@@ -213,6 +215,18 @@ def compile(code, args=0, arglist=(), freevars=[], varargs=False,
     func.__doc__ = docstring # TODO: I thought bp.Code was supposed to do this?
     func.__name__ = name # TODO: Ditto
     return func
+
+def xcompile(source_code, args=0):
+    """Parses Crianza source code and returns a native Python function.
+
+    Args:
+        args: The resulting function's number of input parameters.
+
+    Returns:
+        A callable Python function.
+    """
+    code = crianza.compile(crianza.parse(source_code))
+    return crianza.native.compile(code, args=args)
 
 opmap = {
     cr.lookup("%"):      mod,
