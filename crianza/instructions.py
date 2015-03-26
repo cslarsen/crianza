@@ -259,18 +259,18 @@ def bitwise_complement(vm):
     _assert_binary(a)
     vm.push(~a)
 
-def binary_not(vm):
+def boolean_not(vm):
     a = vm.pop()
     _assert_bool(a)
     vm.push(not a)
 
-def binary_and(vm):
+def boolean_and(vm):
     a = vm.pop()
     b = vm.pop()
     _assert_bool(a, b)
     vm.push(b and a)
 
-def binary_or(vm):
+def boolean_or(vm):
     a = vm.pop()
     b = vm.pop()
     _assert_bool(a, b)
@@ -312,7 +312,7 @@ default_instructions = {
     "@":      at,
     "^":      bitwise_xor,
     "abs":    abs_,
-    "and":    binary_and,
+    "and":    boolean_and,
     "bool":   cast_bool,
     "call":   call,
     "drop":   drop,
@@ -325,8 +325,8 @@ default_instructions = {
     "jmp":    jmp,
     "negate": negate,
     "nop":    nop,
-    "not":    binary_not,
-    "or":     binary_or,
+    "not":    boolean_not,
+    "or":     boolean_or,
     "over":   over,
     "read":   read,
     "return": return_,

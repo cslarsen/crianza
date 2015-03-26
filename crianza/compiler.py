@@ -55,11 +55,11 @@ def check(code):
                     b))
 
         # Invalid: <int> <binary op>
-        binary_ops = [instructions.binary_not,
-                      instructions.binary_or,
-                      instructions.binary_and]
+        boolean_ops = [instructions.boolean_not,
+                      instructions.boolean_or,
+                      instructions.boolean_and]
 
-        if not isbool(a) and safe_lookup(b) in binary_ops:
+        if not isbool(a) and safe_lookup(b) in boolean_ops:
             raise CompileError(
                 "Can only use binary operators on booleans (index %d): %s %s" %
                     (i, a, b))

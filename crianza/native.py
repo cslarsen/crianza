@@ -48,9 +48,6 @@ def greater():
 def at(lineno):
     return [(bp.LOAD_CONST, lineno)]
 
-def bitwise_or():
-    return [(bp.BINARY_OR, None)]
-
 def bitwise_xor():
     return [(bp.BINARY_XOR, None)]
 
@@ -112,7 +109,7 @@ def negate():
 def nop():
     return [(bp.NOP, None)]
 
-def binary_and(lineno):
+def boolean_and(lineno):
     # Stack: a b
     return [
         (bp.JUMP_IF_FALSE_OR_POP, lineno+2*3),
@@ -121,12 +118,10 @@ def binary_and(lineno):
         (bp.POP_TOP, None),
     ]
 
-def binary_not():
-    # TODO: Rename our "binary_not" to "unary_not"
-    # TODO: This is correct, it evaluates "not a"
+def boolean_not():
     return [(bp.UNARY_NOT, None)]
 
-def binary_or():
+def boolean_or():
     # TODO: This is wrong, this is a bitwise op and nor "a or b"
     return [(bp.BINARY_OR, None)]
 
@@ -229,7 +224,7 @@ instructions = {
     "@":      at,
     "^":      bitwise_xor,
     "abs":    abs_,
-    "and":    binary_and,
+    "and":    boolean_and,
     "bool":   cast_bool,
     "call":   call,
     "drop":   drop,
@@ -242,8 +237,8 @@ instructions = {
     "jmp":    jmp,
     "negate": negate,
     "nop":    nop,
-    "not":    binary_not,
-    "or":     binary_or,
+    "not":    boolean_not,
+    "or":     boolean_or,
     "over":   over,
     "read":   read,
     "return": return_,
