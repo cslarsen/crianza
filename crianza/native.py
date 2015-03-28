@@ -94,10 +94,16 @@ def cast_float(lineno):
     return __call_function("float")
 
 def if_stmt(lineno):
-    # Stack: false_clause true_clause test
+    # Stack: (p)redicate (c)onsequent (a)lternative
+    # Example: "true  'yes' 'no' if" ==> 'yes'
+    # Example: "false 'yes' 'no' if" ==> 'no'
+    pop = bp.Label()
     return [
-        (bp.JUMP_IF_FALSE, lineno+3+3), # if false, pop top
-        (bp.ROT_TWO, None), # if true, rotate before popping
+        (bp.ROT_THREE, None),        # p c a -- a p c
+        (bp.ROT_TWO, None),          # a p c -- a c p
+        (bp.POP_JUMP_IF_FALSE, pop),
+        (bp.ROT_TWO, None),          #  a c  -- c a
+        (pop, None),
         (bp.POP_TOP, None),
     ]
 
@@ -216,7 +222,7 @@ def compile(code, args=0, arglist=(), freevars=[], varargs=False,
     func.__name__ = name # TODO: Ditto
     return func
 
-def xcompile(source_code, args=0):
+def xcompile(source_code, args=0, optimize=True):
     """Parses Crianza source code and returns a native Python function.
 
     Args:
@@ -225,8 +231,23 @@ def xcompile(source_code, args=0):
     Returns:
         A callable Python function.
     """
-    code = crianza.compile(crianza.parse(source_code))
+    code = crianza.compile(crianza.parse(source_code), optimize=optimize)
     return crianza.native.compile(code, args=args)
+
+def xeval(source, optimize=True):
+    """Compiles to native Python bytecode and runs program, returning the
+    topmost value on the stack.
+
+    Args:
+        optimize: Whether to optimize the code after parsing it.
+
+    Returns:
+        None: If the stack is empty
+        obj: If the stack contains a single value
+        [obj, obj, ...]: If the stack contains many values
+    """
+    native = xcompile(source, optimize=optimize)
+    return native()
 
 opmap = {
     cr.lookup("%"):      mod,
