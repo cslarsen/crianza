@@ -3,6 +3,10 @@ Contains extremely experimental support for compiling to native Python.
 
 Beware that actually running your code as native Python bytecode may segfault
 the interpreter!
+
+TODO:
+    - Read all jump locations (not entirely possible, actually), convert to
+      bp.Label.
 """
 
 import byteplay as bp
@@ -125,11 +129,13 @@ def nop(lineno):
     return [(bp.NOP, None)]
 
 def boolean_and(lineno):
+    # a b -- (b and a)
+    label_out = bp.Label()
     return [
-        (bp.JUMP_IF_FALSE_OR_POP, lineno+2*3),
-        (bp.JUMP_RELATIVE, 3*3),
-        (bp.ROT_TWO, None),
+        (bp.POP_JUMP_IF_TRUE, label_out), # a b -- a
         (bp.POP_TOP, None),
+        (bp.LOAD_CONST, False),
+        (label_out, None),
     ]
 
 def boolean_not(lineno):
