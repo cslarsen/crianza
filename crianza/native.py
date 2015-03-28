@@ -130,6 +130,8 @@ def nop(lineno):
 
 def boolean_and(lineno):
     # a b -- (b and a)
+    # TODO: Our other lang requires these are booleans
+    # TODO: Use JUMP_IF_FALSE_OR_POP and leave either a or b
     label_out = bp.Label()
     return [
         (bp.POP_JUMP_IF_TRUE, label_out), # a b -- a
@@ -142,8 +144,7 @@ def boolean_not(lineno):
     return [(bp.UNARY_NOT, None)]
 
 def boolean_or(lineno):
-    # TODO: This is wrong, this is a bitwise op and nor "a or b". What we need
-    # is a branching, short-circuit block like boolean_and.
+    # TODO: This is wrong. Implement as shown in boolean_and
     return [(bp.BINARY_OR, None)]
 
 def over(lineno):
@@ -217,6 +218,10 @@ def compile(code, args=0, arglist=(), freevars=[], varargs=False,
             argname = "arg%d" % n
             arglist = arglist + (argname,)
             code = [(bp.LOAD_FAST, argname)] + code
+
+    # First of all, push a None value in case we run code like "'hey' .", so
+    # that we always have a value to return.
+    code = [(bp.LOAD_CONST, None)] + code
 
     codeobj = bp.Code(code, freevars=freevars, args=arglist, varargs=varargs,
             varkwargs=varkwargs, newlocals=newlocals, name=name,
