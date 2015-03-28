@@ -7,6 +7,20 @@ the interpreter!
 TODO:
     - Read all jump locations (not entirely possible, actually), convert to
       bp.Label.
+
+    - In the entire language, require that jumps are absolute? if-jumps are OK,
+      but they should all be constants (or possible to deduce), so "read int
+      jmp" should not be allowable. Or find another way (use structured
+      programming for loops, pass on subroutines for call/return to the native
+      compiler so it can deduce positions, have compile be able to return these
+      positions).
+
+      An alternative would be to do
+
+        labels[lineno] = bp.Label()
+
+      and put a label for each line. That works, but I don't know if the
+      byteplay module will optimize away unused jumps for us? (Probably does)
 """
 
 import byteplay as bp
