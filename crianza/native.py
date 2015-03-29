@@ -32,47 +32,47 @@ import crianza.instructions as cr
 import sys
 
 
-def mod(lineno):
+def mod():
     return [(bp.BINARY_MODULO, None)]
 
-def add(lineno):
+def add():
     return [(bp.BINARY_ADD, None)]
 
-def bitwise_and(lineno):
+def bitwise_and():
     return [(bp.BINARY_AND, None)]
 
-def mul(lineno):
+def mul():
     return [(bp.BINARY_MULTIPLY, None)]
 
-def sub(lineno):
+def sub():
     return [(bp.BINARY_SUBTRACT, None)]
 
-def dot(lineno):
+def dot():
     # TODO: Use current output stream
     return [
         (bp.PRINT_ITEM, None),
         (bp.PRINT_NEWLINE, None),
     ]
 
-def div(lineno):
+def div():
     return [(bp.BINARY_DIVIDE, None)]
 
-def less(lineno):
+def less():
     return [(bp.COMPARE_OP, "<")]
 
-def not_equal(lineno):
+def not_equal():
     return [(bp.COMPARE_OP, "!=")]
 
-def equal(lineno):
+def equal():
     return [(bp.COMPARE_OP, "==")]
 
-def greater(lineno):
+def greater():
     return [(bp.COMPARE_OP, ">")]
 
-def at(lineno):
-    return [(bp.LOAD_CONST, lineno)]
+def at():
+    raise NotImplementedError("@")
 
-def bitwise_xor(lineno):
+def bitwise_xor():
     return [(bp.BINARY_XOR, None)]
 
 def __call_function(name, args):
@@ -92,40 +92,40 @@ def __call_function(name, args):
     else:
         raise NotImplementedError("__call_function with more than 1 args")
 
-def abs_(lineno):
+def abs_():
     return __call_function("abs", 1)
 
-def cast_bool(lineno):
+def cast_bool():
     return __call_function("bool", 1)
 
-def call(lineno):
+def call():
     # TODO: Could use JUMP_ABSOLUTE, but we'd have to calculate some offsets
     # due to input arguments.
     raise NotImplementedError("call")
 
-def return_(lineno):
+def return_():
     raise NotImplementedError("return")
 
-def drop(lineno):
+def drop():
     return [(bp.POP_TOP, None)]
 
-def dup(lineno):
+def dup():
     return [(bp.DUP_TOP, None)]
 
-def exit(lineno):
+def exit():
     # Returns None to Python
     return [
         (bp.LOAD_CONST, None),
         (bp.RETURN_VALUE, None),
     ]
 
-def false_(lineno):
+def false_():
     return [(bp.LOAD_CONST, False)]
 
-def cast_float(lineno):
+def cast_float():
     return __call_function("float", 1)
 
-def if_stmt(lineno):
+def if_stmt():
     # Stack: (p)redicate (c)onsequent (a)lternative
     # Example: "true  'yes' 'no' if" ==> 'yes'
     # Example: "false 'yes' 'no' if" ==> 'no'
@@ -139,10 +139,10 @@ def if_stmt(lineno):
         (bp.POP_TOP, None),
     ]
 
-def cast_int(lineno):
+def cast_int():
     return __call_function("int", 1)
 
-def jmp(lineno):
+def jmp():
     # TODO: Make sure that our way of calculating jump locations work
     return [
         (bp.LOAD_CONST, 3),
@@ -150,13 +150,13 @@ def jmp(lineno):
         (bp.JUMP_ABSOLUTE, None),
     ]
 
-def negate(lineno):
+def negate():
     return [(bp.UNARY_NEGATIVE, None)]
 
-def nop(lineno):
+def nop():
     return [(bp.NOP, None)]
 
-def boolean_and(lineno):
+def boolean_and():
     # a b -- (b and a)
     # TODO: Our other lang requires these are booleans
     # TODO: Use JUMP_IF_FALSE_OR_POP and leave either a or b
@@ -168,21 +168,21 @@ def boolean_and(lineno):
         (label_out, None),
     ]
 
-def boolean_not(lineno):
+def boolean_not():
     return [(bp.UNARY_NOT, None)]
 
-def boolean_or(lineno):
+def boolean_or():
     # TODO: This is wrong. Implement as shown in boolean_and
     return [(bp.BINARY_OR, None)]
 
-def over(lineno):
+def over():
     # a b -- a b a
     return [
         (bp.DUP_TOPX, 2),   # a b -- a b a b
         (bp.POP_TOP, None), # a b a b -- a b a
     ]
 
-def read(lineno):
+def read():
     # TODO: Use current input stream
     return [
         (bp.LOAD_GLOBAL, "sys"),
@@ -193,44 +193,46 @@ def read(lineno):
         (bp.CALL_FUNCTION, 0),
     ]
 
-def rot(lineno):
-    return [(bp.ROT_THREE, None)]
+def rot():
+    # Forth:   a b c -- b c a
+    # CPython: a b c -- c a b
+    return [
+        (bp.ROT_THREE, None), # a b c -- c a b
+        (bp.ROT_THREE, None), # c a b -- b c a
+    ]
 
-def cast_str(lineno):
+def cast_str():
     return __call_function("str", 1)
 
-def swap(lineno):
+def swap():
     return [(bp.ROT_TWO, None)]
 
-def true_(lineno):
+def true_():
     return [(bp.LOAD_CONST, True)]
 
-def write(lineno):
+def write():
     # TODO: Use current output stream
     return [
         (bp.PRINT_ITEM, None),
     ]
 
-def bitwise_or(lineno):
+def bitwise_or():
     return [(bp.BINARY_OR, None)]
 
-def bitwise_complement(lineno):
+def bitwise_complement():
     return [(bp.UNARY_INVERT, None)]
 
 def push(constant):
     return [(bp.LOAD_CONST, constant)]
 
-def to_code(bytecode, firstlineno=1):
-    # TODO: Accept completely compiled code (a VM perhaps), with streams etc.
+def to_code(bytecode):
     code = []
-    lineno = firstlineno
 
     for op in bytecode:
         if cc.is_embedded_push(op):
             code += push(cc.get_embedded_push_value(op))
         else:
-            code += opmap[op](lineno)
-        lineno += 3
+            code += opmap[op]()
 
     return code
 
@@ -238,7 +240,7 @@ def compile(code, args=0, arglist=(), freevars=[], varargs=False,
         varkwargs=False, newlocals=True, name="", filename="", firstlineno=1,
         docstring=""):
 
-    code = to_code(code, firstlineno)
+    code = to_code(code)
     code.append((bp.RETURN_VALUE, None))
 
     if args > 0:
