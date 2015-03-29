@@ -27,6 +27,7 @@ import byteplay as bp
 import crianza
 import crianza.compiler as cc
 import crianza.instructions as cr
+import sys
 
 
 def mod(lineno):
@@ -174,9 +175,9 @@ def read(lineno):
         (bp.LOAD_GLOBAL, "sys"),
         (bp.LOAD_ATTR, "stdin"),
         (bp.LOAD_ATTR, "readline"),
-        (bp.CALL_FUNCTION, None),
+        (bp.CALL_FUNCTION, 0),
         (bp.LOAD_ATTR, "rstrip"),
-        (bp.CALL_FUNCTION, None),
+        (bp.CALL_FUNCTION, 0),
     ]
 
 def rot(lineno):
