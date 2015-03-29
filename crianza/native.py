@@ -21,6 +21,8 @@ TODO:
 
       and put a label for each line. That works, but I don't know if the
       byteplay module will optimize away unused jumps for us? (Probably does)
+
+    - Would it be possible to invoke CPython's optimizer?
 """
 
 import byteplay as bp
