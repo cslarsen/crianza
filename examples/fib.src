@@ -1,0 +1,17 @@
+# The Fibonacci Sequence
+
+: println dup . ;
+: next swap over + ;
+: while rot rot ;
+: wend dup 0 < 7 36 if jmp ;
+
+# First two numbers
+0 println
+1 println
+
+# Calculate next number
+100 while
+  next
+  println
+  rot 1 -
+wend
