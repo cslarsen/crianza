@@ -73,17 +73,28 @@ def at(lineno):
 def bitwise_xor(lineno):
     return [(bp.BINARY_XOR, None)]
 
-def __call_function(name):
-    return [
-        (bp.LOAD_GLOBAL, name),
-        (bp.CALL_FUNCTION, None)
-    ]
+def __call_function(name, args):
+    # TODO: Stuff like this can probably be optimized if we do a global pass
+    # (so we don't need the ROT_TWO)
+    if args == 0:
+        return [
+            (bp.LOAD_GLOBAL, name),
+            (bp.CALL_FUNCTION, args)
+        ]
+    elif args == 1:
+        return [
+            (bp.LOAD_GLOBAL, name),
+            (bp.ROT_TWO, None),
+            (bp.CALL_FUNCTION, args)
+        ]
+    else:
+        raise NotImplementedError("__call_function with more than 1 args")
 
 def abs_(lineno):
-    return __call_function("abs")
+    return __call_function("abs", 1)
 
 def cast_bool(lineno):
-    return __call_function("bool")
+    return __call_function("bool", 1)
 
 def call(lineno):
     # TODO: Could use JUMP_ABSOLUTE, but we'd have to calculate some offsets
@@ -110,7 +121,7 @@ def false_(lineno):
     return [(bp.LOAD_CONST, False)]
 
 def cast_float(lineno):
-    return __call_function("float")
+    return __call_function("float", 1)
 
 def if_stmt(lineno):
     # Stack: (p)redicate (c)onsequent (a)lternative
@@ -127,7 +138,7 @@ def if_stmt(lineno):
     ]
 
 def cast_int(lineno):
-    return __call_function("int")
+    return __call_function("int", 1)
 
 def jmp(lineno):
     # TODO: Make sure that our way of calculating jump locations work
@@ -184,7 +195,7 @@ def rot(lineno):
     return [(bp.ROT_THREE, None)]
 
 def cast_str(lineno):
-    return __call_function("str")
+    return __call_function("str", 1)
 
 def swap(lineno):
     return [(bp.ROT_TWO, None)]
