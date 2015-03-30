@@ -185,6 +185,14 @@ def less(vm):
     a = vm.pop()
     vm.push(a < vm.pop())
 
+def less_equal(vm):
+    a = vm.pop()
+    vm.push(a <= vm.pop())
+
+def greater_equal(vm):
+    a = vm.pop()
+    vm.push(a >= vm.pop())
+
 def greater(vm):
     a = vm.pop()
     vm.push(a > vm.pop())
@@ -306,9 +314,11 @@ default_instructions = {
     ".":      dot,
     "/":      div,
     "<":      less,
+    "<=":     less_equal,
     "<>":     not_equal,
     "=":      equal,
     ">":      greater,
+    ">=":     greater_equal,
     "@":      at,
     "^":      bitwise_xor,
     "abs":    abs_,

@@ -60,6 +60,9 @@ def div():
 def less():
     return [(bp.COMPARE_OP, "<")]
 
+def less_equal():
+    return [(bp.COMPARE_OP, "<=")]
+
 def not_equal():
     return [(bp.COMPARE_OP, "!=")]
 
@@ -68,6 +71,9 @@ def equal():
 
 def greater():
     return [(bp.COMPARE_OP, ">")]
+
+def greater_equal():
+    return [(bp.COMPARE_OP, ">=")]
 
 def at():
     raise NotImplementedError("@")
@@ -299,9 +305,11 @@ opmap = {
     cr.lookup("."):      dot,
     cr.lookup("/"):      div,
     cr.lookup("<"):      less,
+    cr.lookup("<="):     greater_equal,
     cr.lookup("<>"):     not_equal,
     cr.lookup("="):      equal,
     cr.lookup(">"):      greater,
+    cr.lookup(">="):     greater_equal,
     cr.lookup("@"):      at,
     cr.lookup("^"):      bitwise_xor,
     cr.lookup("abs"):    abs_,

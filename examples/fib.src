@@ -3,7 +3,7 @@
 : println dup . ;
 : next swap over + ;
 : while rot rot ;
-: wend dup 0 < 7 36 if jmp ;
+: wend dup 1 < 7 36 if jmp ;
 
 # First two numbers
 0 println

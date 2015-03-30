@@ -216,5 +216,5 @@ def native_types(code):
             try:
                 out.append(instructions.lookup(c))
             except KeyError:
-                raise CompileError("Unknown word: %s" % c)
+                raise CompileError("Unknown word '%s'" % c)
     return out
