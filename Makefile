@@ -25,8 +25,8 @@ setup-test:
 	python setup.py test
 
 publish:
-	python setup.py bdist_wheel
-	gpg --detach-sign -a dist/*.whl
+	python setup.py sdist bdist_wheel
+	gpg --detach-sign -a dist/*
 	twine upload dist/*
 
 tox:
