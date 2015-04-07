@@ -24,8 +24,11 @@ check: test test-examples test-genetic
 setup-test:
 	python setup.py test
 
-publish:
-	python setup.py sdist bdist_wheel
+dist:
+	rm -rf dist/
+	WHEEL_TOOL=$(shell which wheel) python setup.py sdist bdist_wheel
+
+publish: dist
 	find dist -type f -exec gpg --detach-sign -a {} \;
 	twine upload dist/*
 
