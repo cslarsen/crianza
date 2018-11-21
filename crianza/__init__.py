@@ -1,11 +1,11 @@
-from .compiler import (check, compile)
-from .errors import CompileError, MachineError, ParseError
-from .instructions import lookup
-from .optimizer import constant_fold, optimized
-from .parser import (parse, parse_stream)
-from .repl import repl, print_code
-from .stack import Stack
-from .interpreter import (
+from crianza.compiler import (check, compile)
+from crianza.errors import CompileError, MachineError, ParseError
+from crianza.instructions import lookup
+from crianza.optimizer import constant_fold, optimized
+from crianza.parser import (parse, parse_stream)
+from crianza.repl import repl, print_code
+from crianza.stack import Stack
+from crianza.interpreter import (
     Machine,
     code_to_string,
     eval,
