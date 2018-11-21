@@ -39,8 +39,7 @@ def isnumber(*args):
 
     NOTE: Treats booleans as numbers, where True=1 and False=0.
     """
-    return all(map(lambda c: isinstance(c, int) or isinstance(c, long) or
-        isinstance(c, float), args))
+    return all(map(lambda c: isinstance(c, int) or isinstance(c, float), args))
 
 def isbool(*args):
     """Checks if value is boolean."""

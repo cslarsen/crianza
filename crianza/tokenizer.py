@@ -51,7 +51,7 @@ class Tokenizer:
             if char != '\\' and quote:
                 quote = False
 
-        return filter(lambda (t,p): p!="", v)
+        return [t_p for t_p in v if t_p[1] != ""]
 
     def parse_number(self, s):
         """Parses integers in bases 10 and 16 and floats."""
@@ -87,17 +87,17 @@ class Tokenizer:
 
     def parse_string(self, s):
         unescape = {
-           "\\'": "'",
-           "\\\\": "\\",
-           "\\a": "\a",
-           "\\b": "\b",
-           "\\c": "\c",
-           "\\f": "\f",
-           "\\n": "\n",
-           "\\r": "\r",
-           "\\t": "\t",
-           "\\v": "\v",
-           '\\"': '"',
+           r"\\'": r"'",
+           r"\\\\": r"\\",
+           r"\\a": r"\a",
+           r"\\b": r"\b",
+           r"\\c": r"\c",
+           r"\\f": r"\f",
+           r"\\n": r"\n",
+           r"\\r": r"\r",
+           r"\\t": r"\t",
+           r"\\v": r"\v",
+           r'\\"': r'"',
         }
 
         if not (s[0]=='"' and s[-1]=='"'):

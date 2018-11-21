@@ -119,16 +119,16 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
     try:
         it = code.__iter__()
         while True:
-            word = it.next()
+            word = next(it)
             if word == ":":
-                name = it.next()
+                name = next(it)
                 if name in builtins:
                     raise CompileError("Cannot shadow internal word definition '%s'." % name)
                 if name in [":", ";"]:
                     raise CompileError("Invalid word name '%s'." % name)
                 subroutine[name] = []
                 while True:
-                    op = it.next()
+                    op = next(it)
                     if op == ";":
                         subroutine[name].append(instructions.lookup(instructions.return_))
                         break
