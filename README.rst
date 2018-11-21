@@ -346,4 +346,7 @@ Distributed under the BSD 3-Clause License. See the LICENSE.txt file for
 the full text.
 
 Additional patches made by:
- - [Tom Malkin](https://github.com/Harlekuin)
+
+ `Tom Malkin
+ <https://github.com/Harlekuin>`_
+ 
