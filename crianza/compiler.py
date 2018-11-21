@@ -24,8 +24,8 @@ def is_embedded_push(obj):
 def get_embedded_push_value(obj):
     """Extracts the embedded push value."""
     assert(is_embedded_push(obj))
-    assert(len(obj.func_closure) == 1)
-    return obj.func_closure[0].cell_contents
+    assert(len(obj.__closure__) == 1)
+    return obj.__closure__[0].cell_contents
 
 def check(code):
     """Checks code for obvious errors."""
