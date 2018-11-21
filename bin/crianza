@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 import crianza
-import crianza.compiler
+from crianza import compiler
 import optparse
 import sys
 
@@ -47,13 +47,13 @@ def main():
     def run(file, opts):
         try:
             parse_and_run(file, opts)
-        except crianza.MachineError, e:
+        except crianza.MachineError as e:
             print("Runtime error: %s" % e)
             sys.exit(1)
-        except crianza.CompileError, e:
+        except crianza.CompileError as e:
             print("Compilation error: %s" % e)
             sys.exit(1)
-        except crianza.ParseError, e:
+        except crianza.ParseError as e:
             print("Parser error: %s" % e)
             sys.exit(1)
 

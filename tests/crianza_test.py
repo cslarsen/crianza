@@ -11,7 +11,7 @@ import unittest
 import six
 
 try:
-    import crianza.native
+    from crianza import native
     CRIANZA_NATIVE = True
 except ImportError:
     CRIANZA_NATIVE = False

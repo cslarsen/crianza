@@ -1,4 +1,3 @@
-from crianza import compiler
 from crianza import errors
 from crianza import instructions
 from crianza import parser
@@ -6,6 +5,7 @@ from crianza import stack
 import sys
 
 def code_to_string(code):
+    from crianza import compiler
     s = []
     for op in code:
         if isconstant(op):
@@ -73,6 +73,7 @@ def execute(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1)
     Returns:
         A Machine instance.
     """
+    from crianza import compiler
     code = compiler.compile(parser.parse(source), optimize=optimize)
     machine = Machine(code, output=output, input=input)
     return machine.run(steps)

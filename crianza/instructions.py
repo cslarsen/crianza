@@ -3,19 +3,21 @@ Contains a collection of useful instructions, or machine primivites.
 """
 
 from crianza import errors
-from crianza import interpreter
 
 def _assert_number(*args):
+    from crianza import interpreter
     for arg in args:
         if not interpreter.isnumber(arg):
             raise errors.MachineError("Not an integer: %s" % str(arg))
 
 def _assert_bool(*args):
+    from crianza import interpreter
     for arg in args:
         if not interpreter.isbool(arg):
             raise errors.MachineError("Not a boolean: %s" % str(arg))
 
 def _assert_binary(*args):
+    from crianza import interpreter
     for arg in args:
         if not interpreter.isbinary(arg):
             raise errors.MachineError("Not boolean or numerical: %s" % str(arg))
@@ -204,6 +206,7 @@ def false_(vm):
     vm.push(False)
 
 def if_stmt(vm):
+    from crianza import interpreter
     false_clause = vm.pop()
     true_clause = vm.pop()
     test = vm.pop()

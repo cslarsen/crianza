@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3ef267178acb1e881eb3ec0a4a514a02fa09d0deffea7e59195c19210c49724e"
+            "sha256": "14e97f31fe569735286ff57d93462c3126bbaf0c90fb4f2ca5b996ca50917539"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -15,12 +15,7 @@
             }
         ]
     },
-    "default": {
-        "crianza": {
-            "editable": true,
-            "path": "."
-        }
-    },
+    "default": {},
     "develop": {
         "atomicwrites": {
             "hashes": [
@@ -42,14 +37,6 @@
             ],
             "index": "pypi",
             "version": "==1.4.3"
-        },
-        "colorama": {
-            "hashes": [
-                "sha256:a3d89af5db9e9806a779a50296b5fdb466e281147c2c235e8225ecc6dbf7bbf3",
-                "sha256:c9b54bebe91a6a803e0772c8561d53f2926bfeb17cd141fbabcb08424086595c"
-            ],
-            "markers": "sys_platform == 'win32'",
-            "version": "==0.4.0"
         },
         "filelock": {
             "hashes": [
