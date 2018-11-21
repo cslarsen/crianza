@@ -1,8 +1,8 @@
-import compiler
-import errors
-import instructions
-import parser
-import stack
+from crianza import compiler
+from crianza import errors
+from crianza import instructions
+from crianza import parser
+from crianza import stack
 import sys
 
 def code_to_string(code):

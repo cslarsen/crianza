@@ -1,6 +1,6 @@
-import errors
-import instructions
-import interpreter
+from crianza import errors
+from crianza import instructions
+from crianza import interpreter
 
 
 def optimized(code, silent=True, ignore_errors=True):

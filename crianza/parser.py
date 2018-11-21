@@ -1,4 +1,4 @@
-from tokenizer import Tokenizer
+from crianza.tokenizer import Tokenizer
 
 try:
     import StringIO

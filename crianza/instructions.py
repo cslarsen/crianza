@@ -2,8 +2,8 @@
 Contains a collection of useful instructions, or machine primivites.
 """
 
-import errors
-import interpreter
+from crianza import errors
+from crianza import interpreter
 
 def _assert_number(*args):
     for arg in args:
@@ -351,4 +351,3 @@ default_instructions = {
     #"r>":     r_gt, # Parser doesn't like this
     #"r@":     r_at, # Parser doesn't like this
 }
-

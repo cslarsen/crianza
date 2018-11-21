@@ -1,7 +1,7 @@
-from errors import CompileError
-from interpreter import Machine, isconstant, isstring, isbool, isnumber
-import instructions
-import optimizer
+from crianza.errors import CompileError
+from crianza.interpreter import Machine, isconstant, isstring, isbool, isnumber
+from crianza import instructions
+from crianza import optimizer
 
 EMBEDDED_PUSH_TAG = "embedded_push"
 

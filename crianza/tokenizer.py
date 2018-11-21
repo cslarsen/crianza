@@ -5,7 +5,7 @@ Copyright (C) 2015 Christian Stigen Larsen
 Distributed under the BSD 3-Clause license.
 """
 
-from errors import ParseError
+from crianza.errors import ParseError
 
 class Tokenizer:
     # TODO: Require the "enum32" package, then to
