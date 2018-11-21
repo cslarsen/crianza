@@ -8,6 +8,7 @@ import operator
 import random
 import sys
 import unittest
+import six
 
 try:
     import crianza.native
@@ -69,7 +70,7 @@ class TestCrianza(unittest.TestCase):
     def test_random_arithmetic(self):
         ops = [operator.mul, operator.add]
         for op in ops:
-            for _ in xrange(100):
+            for _ in range(100):
                 # TODO: Add negative numbers when our parser supports it
                 a = random.randint(0, +(2**31-1))
                 b = random.randint(0, +(2**31-1))
@@ -110,7 +111,7 @@ class TestCrianza(unittest.TestCase):
         sequence = []
         numbers_to_generate = 15
 
-        for its in xrange(0, numbers_to_generate):
+        for its in range(0, numbers_to_generate):
             sequence.append(machine.top)
             machine.run(13) # next number
 
@@ -118,21 +119,21 @@ class TestCrianza(unittest.TestCase):
             233, 377, 610])
 
     def test_io(self):
-        fin = StringIO.StringIO("Input line 1.\nInput line 2.")
-        fout = StringIO.StringIO()
+        fin = six.StringIO("Input line 1.\nInput line 2.")
+        fout = six.StringIO()
         result = crianza.eval('123 read "howdy" . .', input=fin, output=fout)
         self.assertEqual(result, 123)
         self.assertEqual(fin.getvalue()[fin.tell():], "Input line 2.")
         self.assertEqual(fout.getvalue(), "howdy\nInput line 1.\n")
 
-    def _execfile(self, filename, input=StringIO.StringIO(),
-            output=StringIO.StringIO(), steps=1000):
+    def _execfile(self, filename, input=six.StringIO(),
+            output=six.StringIO(), steps=1000):
         with open(filename, "rt") as f:
             return crianza.execute(f, input=input, output=output, steps=steps)
 
     def test_program_even_odd(self):
-        fin = StringIO.StringIO("1\n2\n3\n")
-        fout = StringIO.StringIO()
+        fin = six.StringIO("1\n2\n3\n")
+        fout = six.StringIO()
         m = self._execfile("tests/even-odd.source", input=fin, output=fout)
         self.assertEqual(fout.getvalue(),
             "Enter a number: The number 1 is odd.\n" +
@@ -145,7 +146,7 @@ class TestCrianza(unittest.TestCase):
         self.assertEqual(m.return_stack, crianza.Stack([]))
 
     def test_program_sum_mul_1(self):
-        fout = StringIO.StringIO()
+        fout = six.StringIO()
         m = self._execfile("tests/sum-mul-1.source", output=fout)
         self.assertEqual(fout.getvalue(), "(2+3) * 4 = 20\n")
         self.assertEqual(m.top, None)
@@ -153,8 +154,8 @@ class TestCrianza(unittest.TestCase):
         self.assertEqual(m.return_stack, crianza.Stack([]))
 
     def test_program_sum_mul_2(self):
-        fin = StringIO.StringIO("12\n34\n")
-        fout = StringIO.StringIO()
+        fin = six.StringIO("12\n34\n")
+        fout = six.StringIO()
         m = self._execfile("tests/sum-mul-2.source", input=fin, output=fout)
         self.assertEqual(fout.getvalue(),
                 "Enter a number: " +
@@ -166,7 +167,7 @@ class TestCrianza(unittest.TestCase):
         self.assertEqual(m.return_stack, crianza.Stack([]))
 
     def test_program_subroutine_1(self):
-        fout = StringIO.StringIO()
+        fout = six.StringIO()
         m = self._execfile("tests/subroutine-1.source", output=fout)
         self.assertEqual(fout.getvalue(), "one\ntwo\nthree\n144\nfinished\n")
         self.assertEqual(m.top, 0)
@@ -174,7 +175,7 @@ class TestCrianza(unittest.TestCase):
         self.assertEqual(m.return_stack, crianza.Stack([]))
 
     def test_program_fibonacci_1(self):
-        fout = StringIO.StringIO()
+        fout = six.StringIO()
         m = self._execfile("tests/fibonacci.source", output=fout, steps=100)
         self.assertEqual(fout.getvalue(),
             "0\n1\n1\n2\n3\n5\n8\n13\n21\n34\n55\n89\n144\n233\n377\n")
@@ -183,7 +184,7 @@ class TestCrianza(unittest.TestCase):
         self.assertEqual(m.return_stack, crianza.Stack([]))
 
     def test_program_fibonacci_2(self):
-        fout = StringIO.StringIO()
+        fout = six.StringIO()
         m = self._execfile("tests/fibonacci-2.source", output=fout, steps=180)
         self.assertEqual(fout.getvalue(),
             "0\n1\n1\n2\n3\n5\n8\n13\n21\n34\n55\n89\n144\n233\n377\n")
