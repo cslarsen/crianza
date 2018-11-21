@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+crianza = {editable = true, path = "."}
+
+[dev-packages]
+pylama = "*"
+"autopep8" = "*"
+pytest = "*"
+tox = "*"
+pyclean-py = "*"
+
+[requires]
+python_version = "3.6"
