@@ -1,4 +1,4 @@
-from errors import MachineError
+from crianza.errors import MachineError
 
 class Stack(object):
     """A stack of values."""

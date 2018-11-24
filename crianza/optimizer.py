@@ -1,6 +1,6 @@
-import errors
-import instructions
-import interpreter
+from crianza import errors
+from crianza import instructions
+from crianza import interpreter
 
 
 def optimized(code, silent=True, ignore_errors=True):
@@ -19,7 +19,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
     # optimized to "5 5 *" and in the next iteration to 25.  Yes, this is
     # extremely slow, big-O wise. We'll fix that some other time. (TODO)
 
-    arithmetic = map(instructions.lookup, [
+    arithmetic = list(map(instructions.lookup, [
         instructions.add,
         instructions.bitwise_and,
         instructions.bitwise_or,
@@ -31,7 +31,7 @@ def constant_fold(code, silent=True, ignore_errors=True):
         instructions.mod,
         instructions.mul,
         instructions.sub,
-    ])
+    ]))
 
     divzero = map(instructions.lookup, [
         instructions.div,

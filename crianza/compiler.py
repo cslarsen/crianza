@@ -1,7 +1,7 @@
-from errors import CompileError
-from interpreter import Machine, isconstant, isstring, isbool, isnumber
-import instructions
-import optimizer
+from crianza.errors import CompileError
+from crianza.interpreter import Machine, isconstant, isstring, isbool, isnumber
+from crianza import instructions
+from crianza import optimizer
 
 EMBEDDED_PUSH_TAG = "embedded_push"
 
@@ -24,8 +24,8 @@ def is_embedded_push(obj):
 def get_embedded_push_value(obj):
     """Extracts the embedded push value."""
     assert(is_embedded_push(obj))
-    assert(len(obj.func_closure) == 1)
-    return obj.func_closure[0].cell_contents
+    assert(len(obj.__closure__) == 1)
+    return obj.__closure__[0].cell_contents
 
 def check(code):
     """Checks code for obvious errors."""
@@ -119,16 +119,16 @@ def compile(code, silent=True, ignore_errors=False, optimize=True):
     try:
         it = code.__iter__()
         while True:
-            word = it.next()
+            word = next(it)
             if word == ":":
-                name = it.next()
+                name = next(it)
                 if name in builtins:
                     raise CompileError("Cannot shadow internal word definition '%s'." % name)
                 if name in [":", ";"]:
                     raise CompileError("Invalid word name '%s'." % name)
                 subroutine[name] = []
                 while True:
-                    op = it.next()
+                    op = next(it)
                     if op == ";":
                         subroutine[name].append(instructions.lookup(instructions.return_))
                         break

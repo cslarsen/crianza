@@ -14,6 +14,7 @@ setup(
     long_description=open("README.rst").read(),
     zip_safe=True,
     test_suite="tests",
+    install_requires=["six"],
 
     keywords=["vm", "virtual machine", "genetic programming", "interpreter",
         "forth", "programming", "code", "bytecode", "assembler", "native",

@@ -1,4 +1,5 @@
-from tokenizer import Tokenizer
+from crianza.tokenizer import Tokenizer
+import six
 
 try:
     import StringIO
@@ -14,7 +15,7 @@ def parse(source):
         source: A string or stream containing source code.
     """
     if isinstance(source, str):
-        return parse_stream(StringIO.StringIO(source))
+        return parse_stream(six.StringIO(source))
     else:
         return parse_stream(source)
 

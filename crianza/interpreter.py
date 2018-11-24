@@ -1,11 +1,11 @@
-import compiler
-import errors
-import instructions
-import parser
-import stack
+from crianza import errors
+from crianza import instructions
+from crianza import parser
+from crianza import stack
 import sys
 
 def code_to_string(code):
+    from crianza import compiler
     s = []
     for op in code:
         if isconstant(op):
@@ -39,8 +39,7 @@ def isnumber(*args):
 
     NOTE: Treats booleans as numbers, where True=1 and False=0.
     """
-    return all(map(lambda c: isinstance(c, int) or isinstance(c, long) or
-        isinstance(c, float), args))
+    return all(map(lambda c: isinstance(c, int) or isinstance(c, float), args))
 
 def isbool(*args):
     """Checks if value is boolean."""
@@ -74,6 +73,7 @@ def execute(source, optimize=True, output=sys.stdout, input=sys.stdin, steps=-1)
     Returns:
         A Machine instance.
     """
+    from crianza import compiler
     code = compiler.compile(parser.parse(source), optimize=optimize)
     machine = Machine(code, output=output, input=input)
     return machine.run(steps)
